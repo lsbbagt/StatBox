@@ -22,117 +22,65 @@ const modules: ModuleItem[] = [
 ]
 
 const selectModule = (module: ModuleType) => {
-  console.log('Selecting module:', module)
+  console.log('Sidebar select:', module)
   emit('select', module)
 }
 
 const toggleCollapse = () => {
   collapsed.value = !collapsed.value
 }
-
-const hideSidebar = () => {
-  emit('update:modelValue', false)
-}
 </script>
 
 <template>
-  <div v-if="modelValue" class="sidebar" :style="{ width: collapsed ? '60px' : '200px' }">
-    <!-- 模块列表 -->
-    <div class="module-list">
-      <div
+  <v-navigation-drawer
+    :model-value="modelValue"
+    @update:model-value="$emit('update:modelValue', $event)"
+    :width="collapsed ? 60 : 200"
+    class="sidebar"
+    :permanent="true"
+    color="background-secondary"
+  >
+    <v-list nav density="compact" class="py-2">
+      <v-list-item
         v-for="module in modules"
         :key="module.id"
-        :class="['module-item', { active: activeModule === module.id }]"
+        :active="activeModule === module.id"
+        :prepend-icon="module.icon"
+        :title="collapsed ? '' : module.name"
         @click="selectModule(module.id)"
-      >
-        <span :class="['mdi', module.icon, 'module-icon']"></span>
-        <span v-if="!collapsed" class="module-name">{{ module.name }}</span>
-      </div>
-    </div>
+        class="module-item my-1"
+        :color="activeModule === module.id ? 'primary' : 'default'"
+        rounded="lg"
+      />
+    </v-list>
     
-    <!-- 底部按钮 -->
-    <div class="sidebar-footer">
-      <button class="footer-btn" @click="toggleCollapse">
-        <span :class="['mdi', collapsed ? 'mdi-chevron-right' : 'mdi-chevron-left']"></span>
-        <span v-if="!collapsed">收起</span>
-      </button>
-    </div>
-  </div>
+    <template #append>
+      <v-divider />
+      <v-btn
+        block
+        variant="text"
+        :prepend-icon="collapsed ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+        @click="toggleCollapse"
+        class="collapse-btn"
+        color="secondary"
+        size="small"
+      >
+        {{ collapsed ? '' : '收起' }}
+      </v-btn>
+    </template>
+  </v-navigation-drawer>
 </template>
 
 <style scoped>
 .sidebar {
-  height: 100%;
-  background-color: #EEF2F6;
-  border-right: 1px solid #E1E8ED;
-  display: flex;
-  flex-direction: column;
-  transition: width 0.2s ease;
-}
-
-.module-list {
-  flex: 1;
-  padding: 8px;
-  overflow-y: auto;
+  border-right: 1px solid rgb(var(--v-theme-border));
 }
 
 .module-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  margin: 4px 0;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #2C3E50;
+  margin: 4px 8px;
 }
 
-.module-item:hover {
-  background-color: rgba(91, 155, 213, 0.1);
-}
-
-.module-item.active {
-  background-color: rgba(91, 155, 213, 0.15);
-  color: #5B9BD5;
-}
-
-.module-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.module-name {
-  font-size: 14px;
-  font-weight: 500;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sidebar-footer {
-  border-top: 1px solid #E1E8ED;
-  padding: 8px;
-}
-
-.footer-btn {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  cursor: pointer;
-  color: #7A8B99;
-  font-size: 14px;
-  transition: all 0.2s ease;
-}
-
-.footer-btn:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  color: #5B9BD5;
+.module-item :deep(.v-list-item__overlay) {
+  background-color: transparent;
 }
 </style>
