@@ -37,23 +37,21 @@ const toggleCollapse = () => {
 
 <template>
   <v-navigation-drawer
-    v-model="visible"
-    width="200"
+    v-if="visible"
+    :model-value="true"
+    :width="collapsed ? 60 : 200"
     class="sidebar"
-    :rail="collapsed"
-    rail-width="60"
-    permanent
     color="background-secondary"
+    :permanent="true"
   >
     <v-list nav density="compact" class="py-2">
       <v-list-item
         v-for="module in modules"
         :key="module.id"
-        :value="module.id"
         :active="activeModule === module.id"
         :prepend-icon="module.icon"
         :title="collapsed ? '' : module.name"
-        @click="selectModule(module.id)"
+        @click.stop="selectModule(module.id)"
         class="module-item my-1"
         :color="activeModule === module.id ? 'primary' : 'default'"
         rounded="lg"
@@ -65,11 +63,13 @@ const toggleCollapse = () => {
       <v-btn
         block
         variant="text"
-        :icon="collapsed ? 'mdi-chevron-right' : 'mdi-chevron-left'"
+        :prepend-icon="collapsed ? 'mdi-chevron-right' : 'mdi-chevron-left'"
         @click="toggleCollapse"
         class="collapse-btn"
         color="secondary"
-      />
+      >
+        {{ collapsed ? '' : '收起' }}
+      </v-btn>
     </template>
   </v-navigation-drawer>
 </template>
@@ -81,5 +81,10 @@ const toggleCollapse = () => {
 
 .module-item {
   margin: 4px 8px;
+  cursor: pointer;
+}
+
+.module-item:hover {
+  background-color: rgba(var(--v-theme-primary), 0.08);
 }
 </style>

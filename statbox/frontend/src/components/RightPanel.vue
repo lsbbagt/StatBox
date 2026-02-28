@@ -52,10 +52,12 @@ const settings = ref([
 ])
 
 const onBookmarkClick = (item: any) => {
+  console.log('Bookmark clicked:', item)
   browserStore.openTab(item.url, item.name)
 }
 
 const openExternal = (url: string) => {
+  console.log('Opening external:', url)
   BrowserOpenURL(url)
 }
 
@@ -80,13 +82,13 @@ const filteredBookmarks = computed(() => {
 
 <template>
   <v-navigation-drawer
-    v-model="visible"
+    v-if="visible"
+    :model-value="true"
     location="right"
     width="280"
     class="right-panel"
-    :temporary="false"
-    permanent
     color="background"
+    :permanent="true"
   >
     <!-- 搜索框 -->
     <v-text-field
@@ -112,9 +114,9 @@ const filteredBookmarks = computed(() => {
           :key="folder.id"
           :value="folder.id"
         >
-          <template #activator="{ props }">
+          <template #activator="{ props: activatorProps }">
             <v-list-item
-              v-bind="props"
+              v-bind="activatorProps"
               :prepend-icon="folder.icon || 'mdi-folder'"
               :title="folder.name"
             />
@@ -126,9 +128,9 @@ const filteredBookmarks = computed(() => {
             :title="item.name"
             :subtitle="item.url"
             prepend-icon="mdi-link"
-            @click="onBookmarkClick(item)"
             rounded="lg"
-            class="ml-4 mb-1"
+            class="ml-4 mb-1 cursor-pointer"
+            @click.stop="onBookmarkClick(item)"
           >
             <template #append>
               <v-btn
@@ -145,9 +147,9 @@ const filteredBookmarks = computed(() => {
       <!-- 代码模板列表 -->
       <v-list v-if="module === 'templates'" nav density="compact">
         <v-list-group value="R">
-          <template #activator="{ props }">
+          <template #activator="{ props: activatorProps }">
             <v-list-item
-              v-bind="props"
+              v-bind="activatorProps"
               prepend-icon="mdi-language-r"
               title="R"
             />
@@ -156,16 +158,16 @@ const filteredBookmarks = computed(() => {
             v-for="file in templates.filter(t => t.language === 'R')"
             :key="file.path"
             :title="file.name"
-            @click="onSelect(file)"
             rounded="lg"
-            class="ml-4"
+            class="ml-4 cursor-pointer"
+            @click.stop="onSelect(file)"
           />
         </v-list-group>
         
         <v-list-group value="Python">
-          <template #activator="{ props }">
+          <template #activator="{ props: activatorProps }">
             <v-list-item
-              v-bind="props"
+              v-bind="activatorProps"
               prepend-icon="mdi-language-python"
               title="Python"
             />
@@ -174,9 +176,9 @@ const filteredBookmarks = computed(() => {
             v-for="file in templates.filter(t => t.language === 'Python')"
             :key="file.path"
             :title="file.name"
-            @click="onSelect(file)"
             rounded="lg"
-            class="ml-4"
+            class="ml-4 cursor-pointer"
+            @click.stop="onSelect(file)"
           />
         </v-list-group>
       </v-list>
@@ -189,9 +191,9 @@ const filteredBookmarks = computed(() => {
           :title="cmd.name"
           :subtitle="cmd.description"
           prepend-icon="mdi-file-document-outline"
-          @click="onSelect(cmd)"
           rounded="lg"
-          class="mb-1"
+          class="mb-1 cursor-pointer"
+          @click.stop="onSelect(cmd)"
         />
       </v-list>
       
@@ -202,9 +204,9 @@ const filteredBookmarks = computed(() => {
           :key="setting.id"
           :title="setting.name"
           :prepend-icon="setting.icon"
-          @click="onSelect(setting)"
           rounded="lg"
-          class="mb-1"
+          class="mb-1 cursor-pointer"
+          @click.stop="onSelect(setting)"
         />
       </v-list>
     </div>
@@ -262,5 +264,13 @@ const filteredBookmarks = computed(() => {
   right: 16px;
   top: 60px;
   z-index: 100;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.cursor-pointer:hover {
+  background-color: rgba(var(--v-theme-primary), 0.08);
 }
 </style>
