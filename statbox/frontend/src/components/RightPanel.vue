@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useBookmarksStore } from '../stores/bookmarks'
 import { useBrowserStore } from '../stores/browser'
+import { BrowserOpenURL } from '../../wailsjs/runtime/runtime'
 import type { ModuleType } from '../types'
 
 const props = defineProps<{
@@ -55,9 +56,7 @@ const onBookmarkClick = (item: any) => {
 }
 
 const openExternal = (url: string) => {
-  if (typeof window !== 'undefined') {
-    window.open(url, '_blank')
-  }
+  BrowserOpenURL(url)
 }
 
 const onSelect = (item: any) => {

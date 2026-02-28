@@ -1,27 +1,12 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
-
-// 直接使用 window 的全局方法
-const openExternal = (url: string) => {
-  if (typeof window !== 'undefined') {
-    window.open(url, '_blank')
-  }
-}
-
-const minimizeWindow = () => {
-  console.log('Minimize window')
-  // TODO: 调用 Wails 运行时 API
-}
-
-const toggleMaximize = async () => {
-  console.log('Toggle maximize')
-  // TODO: 调用 Wails 运行时 API
-}
-
-const closeWindow = () => {
-  console.log('Close window')
-  // TODO: 调用 Wails 运行时 API
-}
+import { ref, onMounted } from 'vue'
+import { 
+  WindowMinimise, 
+  WindowToggleMaximise, 
+  WindowIsMaximised,
+  BrowserOpenURL,
+  Quit 
+} from '../../wailsjs/runtime/runtime'
 
 defineEmits<{
   (e: 'toggle-sidebar'): void
@@ -29,7 +14,40 @@ defineEmits<{
 }>()
 
 const searchQuery = ref('')
-const isMaximized = ref(false)
+const isMaximised = ref(false)
+
+// 检查窗口状态
+const checkWindowState = async () => {
+  try {
+    isMaximised.value = await WindowIsMaximised()
+  } catch (e) {
+    console.error('Failed to check window state:', e)
+  }
+}
+
+onMounted(() => {
+  checkWindowState()
+})
+
+const minimizeWindow = () => {
+  WindowMinimise()
+}
+
+const toggleMaximize = async () => {
+  WindowToggleMaximise()
+  // 延迟检查状态，等待窗口完成切换
+  setTimeout(() => {
+    checkWindowState()
+  }, 100)
+}
+
+const closeWindow = () => {
+  Quit()
+}
+
+const openExternal = (url: string) => {
+  BrowserOpenURL(url)
+}
 
 const onSearch = () => {
   console.log('Search:', searchQuery.value)
@@ -81,7 +99,7 @@ const onSearch = () => {
       @click="minimizeWindow"
     />
     <v-btn
-      :icon="isMaximized ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'"
+      :icon="isMaximised ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'"
       size="small"
       variant="text"
       @click="toggleMaximize"
