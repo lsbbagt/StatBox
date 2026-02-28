@@ -1,0 +1,94 @@
+/* 全局样式 */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+/* 代码字体 */
+code, pre, kbd, samp {
+  font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+}
+
+/* 禁用文本选择（标题栏等） */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* 隐藏滚动条 */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Vuetify 覆盖样式 */
+.v-application {
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* 列表项悬停效果 */
+.v-list-item:hover {
+  cursor: pointer;
+}
+
+/* 按钮文字转换 */
+.v-btn {
+  text-transform: none !important;
+  font-weight: 500;
+}
+
+/* 输入框聚焦效果 */
+.v-text-field .v-field--focused {
+  box-shadow: 0 0 0 2px rgba(91, 155, 213, 0.15);
+}
+
+/* 卡片悬停效果 */
+.v-card:hover {
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+/* 过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 0.25s ease;
+}
+
+.slide-enter-from {
+  transform: translateX(-100%);
+}
+
+.slide-leave-to {
+  transform: translateX(100%);
+}
+
+/* 工具提示样式 */
+.v-tooltip > .v-overlay__content {
+  font-size: 12px;
+  padding: 6px 12px;
+}
