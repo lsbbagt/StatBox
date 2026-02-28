@@ -1,7 +1,5 @@
 {
-  "dependencies": {
-    "@mdi/font": "^7.4.47",
-    "pinia": "^3.0.4",
-    "vuetify": "^3.5.0"
+  "devDependencies": {
+    "terser": "^5.46.0"
   }
 }
