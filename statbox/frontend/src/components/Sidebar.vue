@@ -51,6 +51,7 @@ const toggleCollapse = () => {
         class="module-item my-1"
         :color="activeModule === module.id ? 'primary' : 'default'"
         rounded="lg"
+        link
       />
     </v-list>
     

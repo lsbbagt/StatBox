@@ -129,6 +129,7 @@ const filteredBookmarks = computed(() => {
             prepend-icon="mdi-link"
             rounded="lg"
             class="ml-4 mb-1"
+            link
             @click="onSelect(item)"
           >
             <template #append>
@@ -149,7 +150,7 @@ const filteredBookmarks = computed(() => {
           <template #activator="{ props: activatorProps }">
             <v-list-item
               v-bind="activatorProps"
-              prepend-icon="mdi-language-r"
+              prepend-icon="mdi-code-braces"
               title="R"
             />
           </template>
@@ -159,6 +160,7 @@ const filteredBookmarks = computed(() => {
             :title="file.name"
             rounded="lg"
             class="ml-4"
+            link
             @click="onSelect(file)"
           />
         </v-list-group>
@@ -177,6 +179,7 @@ const filteredBookmarks = computed(() => {
             :title="file.name"
             rounded="lg"
             class="ml-4"
+            link
             @click="onSelect(file)"
           />
         </v-list-group>
@@ -192,6 +195,7 @@ const filteredBookmarks = computed(() => {
           prepend-icon="mdi-file-document-outline"
           rounded="lg"
           class="mb-1"
+          link
           @click="onSelect(cmd)"
         />
       </v-list>
@@ -205,6 +209,7 @@ const filteredBookmarks = computed(() => {
           :prepend-icon="setting.icon"
           rounded="lg"
           class="mb-1"
+          link
           @click="onSelect(setting)"
         />
       </v-list>
