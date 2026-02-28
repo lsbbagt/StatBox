@@ -1,7 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue'
 import { useBookmarksStore } from '../stores/bookmarks'
-import { useBrowserStore } from '../stores/browser'
 import { BrowserOpenURL } from '../../wailsjs/runtime/runtime'
 import type { ModuleType } from '../types'
 
@@ -15,14 +14,7 @@ const emit = defineEmits<{
 }>()
 
 const bookmarksStore = useBookmarksStore()
-const browserStore = useBrowserStore()
-
 const searchQuery = ref('')
-
-const visible = computed({
-  get: () => props.modelValue,
-  set: (val) => emit('update:modelValue', val)
-})
 
 const searchPlaceholder = computed(() => {
   switch (props.module) {
@@ -51,9 +43,15 @@ const settings = ref([
   { id: 'shortcuts', name: '快捷键', icon: 'mdi-keyboard' },
 ])
 
-const onBookmarkClick = (item: any) => {
-  console.log('Bookmark clicked:', item)
-  browserStore.openTab(item.url, item.name)
+// 展开的文件夹
+const expandedFolders = ref<Set<string>>(new Set(['1', 'R', 'Python']))
+
+const toggleFolder = (folderId: string) => {
+  if (expandedFolders.value.has(folderId)) {
+    expandedFolders.value.delete(folderId)
+  } else {
+    expandedFolders.value.add(folderId)
+  }
 }
 
 const openExternal = (url: string) => {
@@ -81,196 +79,339 @@ const filteredBookmarks = computed(() => {
 </script>
 
 <template>
-  <v-navigation-drawer
-    v-if="visible"
-    :model-value="true"
-    location="right"
-    width="280"
-    class="right-panel"
-    color="background"
-    :permanent="true"
-  >
+  <div v-if="modelValue" class="right-panel">
     <!-- 搜索框 -->
-    <v-text-field
-      v-model="searchQuery"
-      density="compact"
-      variant="outlined"
-      :placeholder="searchPlaceholder"
-      prepend-inner-icon="mdi-magnify"
-      class="ma-3 search-field"
-      hide-details
-      clearable
-      bg-color="surface"
-    />
-    
-    <v-divider />
-    
-    <!-- 列表内容 -->
-    <div class="list-container pa-2">
-      <!-- 收藏夹列表 -->
-      <v-list v-if="module === 'bookmarks'" nav density="compact">
-        <v-list-group
-          v-for="folder in filteredBookmarks"
-          :key="folder.id"
-          :value="folder.id"
-        >
-          <template #activator="{ props: activatorProps }">
-            <v-list-item
-              v-bind="activatorProps"
-              :prepend-icon="folder.icon || 'mdi-folder'"
-              :title="folder.name"
-            />
-          </template>
-          
-          <v-list-item
-            v-for="item in folder.items"
-            :key="item.id"
-            :title="item.name"
-            :subtitle="item.url"
-            prepend-icon="mdi-link"
-            rounded="lg"
-            class="ml-4 mb-1 cursor-pointer"
-            @click.stop="onBookmarkClick(item)"
-          >
-            <template #append>
-              <v-btn
-                icon="mdi-open-in-new"
-                size="x-small"
-                variant="text"
-                @click.stop="openExternal(item.url)"
-              />
-            </template>
-          </v-list-item>
-        </v-list-group>
-      </v-list>
-      
-      <!-- 代码模板列表 -->
-      <v-list v-if="module === 'templates'" nav density="compact">
-        <v-list-group value="R">
-          <template #activator="{ props: activatorProps }">
-            <v-list-item
-              v-bind="activatorProps"
-              prepend-icon="mdi-language-r"
-              title="R"
-            />
-          </template>
-          <v-list-item
-            v-for="file in templates.filter(t => t.language === 'R')"
-            :key="file.path"
-            :title="file.name"
-            rounded="lg"
-            class="ml-4 cursor-pointer"
-            @click.stop="onSelect(file)"
-          />
-        </v-list-group>
-        
-        <v-list-group value="Python">
-          <template #activator="{ props: activatorProps }">
-            <v-list-item
-              v-bind="activatorProps"
-              prepend-icon="mdi-language-python"
-              title="Python"
-            />
-          </template>
-          <v-list-item
-            v-for="file in templates.filter(t => t.language === 'Python')"
-            :key="file.path"
-            :title="file.name"
-            rounded="lg"
-            class="ml-4 cursor-pointer"
-            @click.stop="onSelect(file)"
-          />
-        </v-list-group>
-      </v-list>
-      
-      <!-- 命令库列表 -->
-      <v-list v-if="module === 'commands'" nav density="compact">
-        <v-list-item
-          v-for="cmd in commands"
-          :key="cmd.path"
-          :title="cmd.name"
-          :subtitle="cmd.description"
-          prepend-icon="mdi-file-document-outline"
-          rounded="lg"
-          class="mb-1 cursor-pointer"
-          @click.stop="onSelect(cmd)"
-        />
-      </v-list>
-      
-      <!-- 设置分类 -->
-      <v-list v-if="module === 'settings'" nav density="compact">
-        <v-list-item
-          v-for="setting in settings"
-          :key="setting.id"
-          :title="setting.name"
-          :prepend-icon="setting.icon"
-          rounded="lg"
-          class="mb-1 cursor-pointer"
-          @click.stop="onSelect(setting)"
-        />
-      </v-list>
+    <div class="search-container">
+      <span class="mdi mdi-magnify search-icon"></span>
+      <input 
+        v-model="searchQuery"
+        type="text"
+        :placeholder="searchPlaceholder"
+        class="search-input"
+      />
     </div>
     
-    <!-- 折叠按钮 -->
-    <template #append>
-      <v-divider />
-      <v-btn
-        block
-        variant="text"
-        prepend-icon="mdi-chevron-right"
-        @click="visible = false"
-        class="collapse-btn"
-        color="secondary"
-      >
+    <div class="divider"></div>
+    
+    <!-- 列表内容 -->
+    <div class="list-container">
+      <!-- 收藏夹列表 -->
+      <div v-if="module === 'bookmarks'" class="list-section">
+        <div v-for="folder in filteredBookmarks" :key="folder.id" class="folder">
+          <div class="folder-header" @click="toggleFolder(folder.id)">
+            <span :class="['mdi', expandedFolders.has(folder.id) ? 'mdi-chevron-down' : 'mdi-chevron-right', 'expand-icon']"></span>
+            <span class="mdi mdi-folder folder-icon"></span>
+            <span class="folder-name">{{ folder.name }}</span>
+          </div>
+          <div v-if="expandedFolders.has(folder.id)" class="folder-items">
+            <div 
+              v-for="item in folder.items" 
+              :key="item.id" 
+              class="list-item"
+              @click="onSelect(item)"
+            >
+              <span class="mdi mdi-link item-icon"></span>
+              <div class="item-content">
+                <span class="item-name">{{ item.name }}</span>
+                <span class="item-url">{{ item.url }}</span>
+              </div>
+              <button class="external-btn" @click.stop="openExternal(item.url)" title="在浏览器中打开">
+                <span class="mdi mdi-open-in-new"></span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 代码模板列表 -->
+      <div v-if="module === 'templates'" class="list-section">
+        <div class="folder">
+          <div class="folder-header" @click="toggleFolder('R')">
+            <span :class="['mdi', expandedFolders.has('R') ? 'mdi-chevron-down' : 'mdi-chevron-right', 'expand-icon']"></span>
+            <span class="mdi mdi-language-r folder-icon"></span>
+            <span class="folder-name">R</span>
+          </div>
+          <div v-if="expandedFolders.has('R')" class="folder-items">
+            <div 
+              v-for="file in templates.filter(t => t.language === 'R')" 
+              :key="file.path" 
+              class="list-item"
+              @click="onSelect(file)"
+            >
+              <span class="mdi mdi-file-document-outline item-icon"></span>
+              <span class="item-name">{{ file.name }}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="folder">
+          <div class="folder-header" @click="toggleFolder('Python')">
+            <span :class="['mdi', expandedFolders.has('Python') ? 'mdi-chevron-down' : 'mdi-chevron-right', 'expand-icon']"></span>
+            <span class="mdi mdi-language-python folder-icon"></span>
+            <span class="folder-name">Python</span>
+          </div>
+          <div v-if="expandedFolders.has('Python')" class="folder-items">
+            <div 
+              v-for="file in templates.filter(t => t.language === 'Python')" 
+              :key="file.path" 
+              class="list-item"
+              @click="onSelect(file)"
+            >
+              <span class="mdi mdi-file-document-outline item-icon"></span>
+              <span class="item-name">{{ file.name }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 命令库列表 -->
+      <div v-if="module === 'commands'" class="list-section">
+        <div 
+          v-for="cmd in commands" 
+          :key="cmd.path" 
+          class="list-item"
+          @click="onSelect(cmd)"
+        >
+          <span class="mdi mdi-file-document-outline item-icon"></span>
+          <div class="item-content">
+            <span class="item-name">{{ cmd.name }}</span>
+            <span class="item-desc">{{ cmd.description }}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 设置分类 -->
+      <div v-if="module === 'settings'" class="list-section">
+        <div 
+          v-for="setting in settings" 
+          :key="setting.id" 
+          class="list-item"
+          @click="onSelect(setting)"
+        >
+          <span :class="['mdi', setting.icon, 'item-icon']"></span>
+          <span class="item-name">{{ setting.name }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 隐藏按钮 -->
+    <div class="panel-footer">
+      <button class="hide-btn" @click="emit('update:modelValue', false)">
+        <span class="mdi mdi-chevron-right"></span>
         隐藏面板
-      </v-btn>
-    </template>
-  </v-navigation-drawer>
+      </button>
+    </div>
+  </div>
   
-  <!-- 展开按钮（当隐藏时显示） -->
-  <v-btn
-    v-if="!visible"
-    icon="mdi-chevron-left"
-    size="small"
-    variant="outlined"
-    class="expand-btn"
-    color="primary"
-    @click="visible = true"
-  />
+  <!-- 展开按钮 -->
+  <button v-if="!modelValue" class="expand-btn" @click="emit('update:modelValue', true)">
+    <span class="mdi mdi-chevron-left"></span>
+  </button>
 </template>
 
 <style scoped>
 .right-panel {
-  border-left: 1px solid rgb(var(--v-theme-border));
+  width: 280px;
+  height: 100%;
+  background-color: #F8FAFB;
+  border-left: 1px solid #E1E8ED;
+  display: flex;
+  flex-direction: column;
 }
 
-.search-field {
+.search-container {
+  display: flex;
+  align-items: center;
+  background-color: #FFFFFF;
+  border: 1px solid #E1E8ED;
+  border-radius: 8px;
+  margin: 12px;
+  padding: 8px 12px;
+}
+
+.search-icon {
+  color: #7A8B99;
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.search-input {
+  border: none;
+  background: transparent;
+  outline: none;
   font-size: 14px;
+  flex: 1;
+  color: #2C3E50;
+}
+
+.search-input::placeholder {
+  color: #9BA8B3;
+}
+
+.divider {
+  height: 1px;
+  background-color: #E1E8ED;
 }
 
 .list-container {
-  height: calc(100% - 140px);
+  flex: 1;
   overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  padding: 8px;
 }
 
-.list-container::-webkit-scrollbar {
-  display: none;
+.list-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.folder {
+  margin-bottom: 4px;
+}
+
+.folder-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.folder-header:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.expand-icon {
+  font-size: 18px;
+  color: #7A8B99;
+}
+
+.folder-icon {
+  font-size: 18px;
+  color: #5B9BD5;
+}
+
+.folder-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2C3E50;
+}
+
+.folder-items {
+  margin-left: 16px;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.list-item:hover {
+  background-color: rgba(91, 155, 213, 0.1);
+}
+
+.item-icon {
+  font-size: 18px;
+  color: #7A8B99;
+  flex-shrink: 0;
+}
+
+.item-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.item-name {
+  font-size: 14px;
+  color: #2C3E50;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-url, .item-desc {
+  font-size: 12px;
+  color: #9BA8B3;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.external-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7A8B99;
+  transition: all 0.2s;
+}
+
+.external-btn:hover {
+  background-color: rgba(91, 155, 213, 0.15);
+  color: #5B9BD5;
+}
+
+.panel-footer {
+  border-top: 1px solid #E1E8ED;
+  padding: 8px;
+}
+
+.hide-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #7A8B99;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.hide-btn:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: #5B9BD5;
 }
 
 .expand-btn {
   position: fixed;
   right: 16px;
   top: 60px;
-  z-index: 100;
-}
-
-.cursor-pointer {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #E1E8ED;
+  background-color: #FFFFFF;
+  border-radius: 8px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5B9BD5;
+  font-size: 20px;
+  z-index: 100;
+  transition: all 0.2s;
 }
 
-.cursor-pointer:hover {
-  background-color: rgba(var(--v-theme-primary), 0.08);
+.expand-btn:hover {
+  background-color: #5B9BD5;
+  color: white;
 }
 </style>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import type { ModuleType, ModuleItem } from '../types'
 
 const props = defineProps<{
@@ -14,11 +14,6 @@ const emit = defineEmits<{
 
 const collapsed = ref(false)
 
-const visible = computed({
-  get: () => props.modelValue,
-  set: (val) => emit('update:modelValue', val)
-})
-
 const modules: ModuleItem[] = [
   { id: 'bookmarks', name: '收藏夹', icon: 'mdi-folder-star' },
   { id: 'templates', name: '代码模板', icon: 'mdi-code-tags' },
@@ -27,64 +22,117 @@ const modules: ModuleItem[] = [
 ]
 
 const selectModule = (module: ModuleType) => {
+  console.log('Selecting module:', module)
   emit('select', module)
 }
 
 const toggleCollapse = () => {
   collapsed.value = !collapsed.value
 }
+
+const hideSidebar = () => {
+  emit('update:modelValue', false)
+}
 </script>
 
 <template>
-  <v-navigation-drawer
-    v-if="visible"
-    :model-value="true"
-    :width="collapsed ? 60 : 200"
-    class="sidebar"
-    color="background-secondary"
-    :permanent="true"
-  >
-    <v-list nav density="compact" class="py-2">
-      <v-list-item
+  <div v-if="modelValue" class="sidebar" :style="{ width: collapsed ? '60px' : '200px' }">
+    <!-- 模块列表 -->
+    <div class="module-list">
+      <div
         v-for="module in modules"
         :key="module.id"
-        :active="activeModule === module.id"
-        :prepend-icon="module.icon"
-        :title="collapsed ? '' : module.name"
-        @click.stop="selectModule(module.id)"
-        class="module-item my-1"
-        :color="activeModule === module.id ? 'primary' : 'default'"
-        rounded="lg"
-      />
-    </v-list>
-    
-    <template #append>
-      <v-divider />
-      <v-btn
-        block
-        variant="text"
-        :prepend-icon="collapsed ? 'mdi-chevron-right' : 'mdi-chevron-left'"
-        @click="toggleCollapse"
-        class="collapse-btn"
-        color="secondary"
+        :class="['module-item', { active: activeModule === module.id }]"
+        @click="selectModule(module.id)"
       >
-        {{ collapsed ? '' : '收起' }}
-      </v-btn>
-    </template>
-  </v-navigation-drawer>
+        <span :class="['mdi', module.icon, 'module-icon']"></span>
+        <span v-if="!collapsed" class="module-name">{{ module.name }}</span>
+      </div>
+    </div>
+    
+    <!-- 底部按钮 -->
+    <div class="sidebar-footer">
+      <button class="footer-btn" @click="toggleCollapse">
+        <span :class="['mdi', collapsed ? 'mdi-chevron-right' : 'mdi-chevron-left']"></span>
+        <span v-if="!collapsed">收起</span>
+      </button>
+    </div>
+  </div>
 </template>
 
 <style scoped>
 .sidebar {
-  border-right: 1px solid rgb(var(--v-theme-border));
+  height: 100%;
+  background-color: #EEF2F6;
+  border-right: 1px solid #E1E8ED;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.2s ease;
+}
+
+.module-list {
+  flex: 1;
+  padding: 8px;
+  overflow-y: auto;
 }
 
 .module-item {
-  margin: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  margin: 4px 0;
+  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s ease;
+  color: #2C3E50;
 }
 
 .module-item:hover {
-  background-color: rgba(var(--v-theme-primary), 0.08);
+  background-color: rgba(91, 155, 213, 0.1);
+}
+
+.module-item.active {
+  background-color: rgba(91, 155, 213, 0.15);
+  color: #5B9BD5;
+}
+
+.module-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.module-name {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-footer {
+  border-top: 1px solid #E1E8ED;
+  padding: 8px;
+}
+
+.footer-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #7A8B99;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.footer-btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  color: #5B9BD5;
 }
 </style>
