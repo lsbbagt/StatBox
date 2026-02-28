@@ -18,8 +18,10 @@ func main() {
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "StatBox",
-		Width:  1200,
-		Height: 800,
+		Width:  1024,
+		Height: 700,
+		MinWidth: 800,
+		MinHeight: 600,
 		// 启用无边框窗口
 		Frameless: true,
 		AssetServer: &assetserver.Options{
