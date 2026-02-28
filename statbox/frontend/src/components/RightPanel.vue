@@ -54,6 +54,12 @@ const onBookmarkClick = (item: any) => {
   browserStore.openTab(item.url, item.name)
 }
 
+const openExternal = (url: string) => {
+  if (typeof window !== 'undefined') {
+    window.open(url, '_blank')
+  }
+}
+
 const onSelect = (item: any) => {
   console.log('Selected:', item)
 }
@@ -130,7 +136,7 @@ const filteredBookmarks = computed(() => {
                 icon="mdi-open-in-new"
                 size="x-small"
                 variant="text"
-                @click.stop="window.open(item.url, '_blank')"
+                @click.stop="openExternal(item.url)"
               />
             </template>
           </v-list-item>

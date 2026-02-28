@@ -1,82 +1,38 @@
 <script lang="ts" setup>
-import { ref, computed } from 'vue'
-import TitleBar from './components/TitleBar.vue'
-import Sidebar from './components/Sidebar.vue'
-import RightPanel from './components/RightPanel.vue'
-import BookmarksView from './views/BookmarksView.vue'
-import TemplatesView from './views/TemplatesView.vue'
-import CommandsView from './views/CommandsView.vue'
-import SettingsView from './views/SettingsView.vue'
-import type { ModuleType } from './types'
+import { ref } from 'vue'
 
-const sidebarVisible = ref(true)
-const rightPanelVisible = ref(true)
-const activeModule = ref<ModuleType>('bookmarks')
-
-const currentView = computed(() => {
-  switch (activeModule.value) {
-    case 'bookmarks': return BookmarksView
-    case 'templates': return TemplatesView
-    case 'commands': return CommandsView
-    case 'settings': return SettingsView
-    default: return BookmarksView
-  }
-})
+const message = ref('StatBox 已成功启动！')
+const count = ref(0)
 </script>
 
 <template>
   <v-app>
-    <!-- 自定义标题栏 -->
-    <TitleBar 
-      @toggle-sidebar="sidebarVisible = !sidebarVisible"
-      @toggle-right-panel="rightPanelVisible = !rightPanelVisible"
-    />
-    
-    <!-- 主内容区域 -->
-    <v-main class="main-content">
-      <div class="d-flex h-100">
-        <!-- 左侧模块选择器 -->
-        <Sidebar
-          v-model="sidebarVisible"
-          :active-module="activeModule"
-          @select="activeModule = $event"
-        />
-        
-        <!-- 中间主面板 -->
-        <div class="flex-grow-1 content-wrapper">
-          <component :is="currentView" />
-        </div>
-        
-        <!-- 右侧列表面板 -->
-        <RightPanel
-          v-model="rightPanelVisible"
-          :module="activeModule"
-        />
-      </div>
+    <v-main>
+      <v-container class="fill-height">
+        <v-row justify="center" align="center">
+          <v-col cols="12" sm="8" md="6">
+            <v-card class="text-center pa-8" elevation="0">
+              <v-icon icon="mdi-chart-box" size="80" color="primary" class="mb-4" />
+              <h1 class="text-h3 mb-4">StatBox</h1>
+              <p class="text-body-1 mb-6">{{ message }}</p>
+              
+              <v-btn
+                color="primary"
+                size="large"
+                @click="count++"
+              >
+                点击计数: {{ count }}
+              </v-btn>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
     </v-main>
   </v-app>
 </template>
 
 <style>
-/* 隐藏滚动条 */
 html {
   overflow-y: hidden !important;
-}
-
-.main-content {
-  height: calc(100vh - 40px);
-  overflow: hidden;
-  background: rgb(var(--v-theme-background));
-}
-
-.content-wrapper {
-  height: 100%;
-  overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.content-wrapper::-webkit-scrollbar {
-  display: none;
 }
 </style>

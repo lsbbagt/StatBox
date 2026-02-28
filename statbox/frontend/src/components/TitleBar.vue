@@ -1,6 +1,27 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import { WindowMinimise, WindowMaximise, WindowUnmaximise, WindowClose } from '../../wailsjs/runtime'
+
+// 直接使用 window 的全局方法
+const openExternal = (url: string) => {
+  if (typeof window !== 'undefined') {
+    window.open(url, '_blank')
+  }
+}
+
+const minimizeWindow = () => {
+  console.log('Minimize window')
+  // TODO: 调用 Wails 运行时 API
+}
+
+const toggleMaximize = async () => {
+  console.log('Toggle maximize')
+  // TODO: 调用 Wails 运行时 API
+}
+
+const closeWindow = () => {
+  console.log('Close window')
+  // TODO: 调用 Wails 运行时 API
+}
 
 defineEmits<{
   (e: 'toggle-sidebar'): void
@@ -9,19 +30,6 @@ defineEmits<{
 
 const searchQuery = ref('')
 const isMaximized = ref(false)
-
-const minimizeWindow = () => WindowMinimise()
-
-const toggleMaximize = async () => {
-  if (isMaximized.value) {
-    await WindowUnmaximise()
-  } else {
-    await WindowMaximise()
-  }
-  isMaximized.value = !isMaximized.value
-}
-
-const closeWindow = () => WindowClose()
 
 const onSearch = () => {
   console.log('Search:', searchQuery.value)
