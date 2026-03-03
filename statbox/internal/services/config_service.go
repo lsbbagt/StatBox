@@ -35,20 +35,38 @@ type Config struct {
 	Window   WindowConfig  `json:"window"`
 	Features FeatureConfig `json:"features"`
 	Editor   EditorConfig  `json:"editor"`
+	DataDir  string        `json:"dataDir"` // 自定义数据目录路径（为空则使用默认路径）
 }
 
 // ConfigService 配置服务
 type ConfigService struct {
-	configDir  string
-	configFile string
+	configDir     string // 配置文件所在目录 (~/.statbox)
+	configFile    string // 配置文件路径
+	defaultDataDir string // 默认数据目录路径
 }
 
 // NewConfigService 创建配置服务
 func NewConfigService(configDir string) *ConfigService {
 	return &ConfigService{
-		configDir:  configDir,
-		configFile: filepath.Join(configDir, "config.json"),
+		configDir:      configDir,
+		configFile:     filepath.Join(configDir, "config.json"),
+		defaultDataDir: filepath.Join(configDir, "data"), // 默认数据目录为 ~/.statbox/data
 	}
+}
+
+// GetDataDir 获取数据目录路径
+// 如果配置了自定义路径则使用自定义路径，否则使用默认路径
+func (s *ConfigService) GetDataDir() string {
+	config, err := s.LoadConfig()
+	if err != nil {
+		return s.defaultDataDir
+	}
+	
+	if config.DataDir != "" {
+		return config.DataDir
+	}
+	
+	return s.defaultDataDir
 }
 
 // LoadConfig 加载配置

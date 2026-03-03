@@ -159,12 +159,16 @@ const templateContextMenu = ref({
 
 const showTemplateContextMenu = (event: MouseEvent, filePath: string, fileName: string) => {
   templateContextMenu.value = {
-    show: true,
+    show: false, // 先关闭
     x: event.clientX,
     y: event.clientY,
     filePath,
     fileName
   }
+  // 使用 setTimeout 确保菜单正确显示
+  setTimeout(() => {
+    templateContextMenu.value.show = true
+  }, 10)
 }
 
 const closeTemplateContextMenu = () => {
@@ -191,11 +195,14 @@ const moduleContextMenu = ref({
 
 const showModuleContextMenu = (event: MouseEvent, moduleName: string) => {
   moduleContextMenu.value = {
-    show: true,
+    show: false,
     x: event.clientX,
     y: event.clientY,
     moduleName
   }
+  setTimeout(() => {
+    moduleContextMenu.value.show = true
+  }, 10)
 }
 
 const closeModuleContextMenu = () => {
@@ -440,12 +447,15 @@ const contextMenu = ref({
 
 const showContextMenu = (event: MouseEvent, folderId: string, item: BookmarkItem) => {
   contextMenu.value = {
-    show: true,
+    show: false,
     x: event.clientX,
     y: event.clientY,
     folderId,
     item
   }
+  setTimeout(() => {
+    contextMenu.value.show = true
+  }, 10)
 }
 
 const closeContextMenu = () => {
@@ -767,29 +777,34 @@ const contextMenuOpenExternal = () => {
     v-model="contextMenu.show"
     :position-x="contextMenu.x"
     :position-y="contextMenu.y"
+    absolute
     offset-y
+    :close-on-content-click="true"
+    content-class="context-menu"
   >
-    <v-list density="compact" nav>
-      <v-list-item @click="contextMenuEdit">
-        <template #prepend>
-          <v-icon icon="mdi-pencil" />
-        </template>
-        <v-list-item-title>编辑</v-list-item-title>
-      </v-list-item>
-      <v-list-item @click="contextMenuOpenExternal">
-        <template #prepend>
-          <v-icon icon="mdi-open-in-new" />
-        </template>
-        <v-list-item-title>外部浏览器打开</v-list-item-title>
-      </v-list-item>
-      <v-divider />
-      <v-list-item @click="contextMenuDelete" class="text-error">
-        <template #prepend>
-          <v-icon icon="mdi-delete" color="error" />
-        </template>
-        <v-list-item-title>删除</v-list-item-title>
-      </v-list-item>
-    </v-list>
+    <v-card min-width="180" elevation="8" rounded="lg">
+      <v-list density="compact" nav class="pa-1">
+        <v-list-item @click="contextMenuEdit" rounded="lg">
+          <template #prepend>
+            <v-icon icon="mdi-pencil" size="small" />
+          </template>
+          <v-list-item-title>编辑</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="contextMenuOpenExternal" rounded="lg">
+          <template #prepend>
+            <v-icon icon="mdi-open-in-new" size="small" />
+          </template>
+          <v-list-item-title>外部浏览器打开</v-list-item-title>
+        </v-list-item>
+        <v-divider class="my-1" />
+        <v-list-item @click="contextMenuDelete" class="text-error" rounded="lg">
+          <template #prepend>
+            <v-icon icon="mdi-delete" color="error" size="small" />
+          </template>
+          <v-list-item-title>删除</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-card>
   </v-menu>
   
   <!-- 新建模块对话框 -->
@@ -819,23 +834,28 @@ const contextMenuOpenExternal = () => {
     v-model="templateContextMenu.show"
     :position-x="templateContextMenu.x"
     :position-y="templateContextMenu.y"
+    absolute
     offset-y
+    :close-on-content-click="true"
+    content-class="context-menu"
   >
-    <v-list density="compact" nav>
-      <v-list-item @click="contextMenuOpenFolder">
-        <template #prepend>
-          <v-icon icon="mdi-folder-open" />
-        </template>
-        <v-list-item-title>在文件夹中打开</v-list-item-title>
-      </v-list-item>
-      <v-divider />
-      <v-list-item @click="contextMenuDeleteFile" class="text-error">
-        <template #prepend>
-          <v-icon icon="mdi-delete" color="error" />
-        </template>
-        <v-list-item-title>删除</v-list-item-title>
-      </v-list-item>
-    </v-list>
+    <v-card min-width="180" elevation="8" rounded="lg">
+      <v-list density="compact" nav class="pa-1">
+        <v-list-item @click="contextMenuOpenFolder" rounded="lg">
+          <template #prepend>
+            <v-icon icon="mdi-folder-open" size="small" />
+          </template>
+          <v-list-item-title>在文件夹中打开</v-list-item-title>
+        </v-list-item>
+        <v-divider class="my-1" />
+        <v-list-item @click="contextMenuDeleteFile" class="text-error" rounded="lg">
+          <template #prepend>
+            <v-icon icon="mdi-delete" color="error" size="small" />
+          </template>
+          <v-list-item-title>删除</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-card>
   </v-menu>
   
   <!-- 模块右键菜单 -->
@@ -843,23 +863,28 @@ const contextMenuOpenExternal = () => {
     v-model="moduleContextMenu.show"
     :position-x="moduleContextMenu.x"
     :position-y="moduleContextMenu.y"
+    absolute
     offset-y
+    :close-on-content-click="true"
+    content-class="context-menu"
   >
-    <v-list density="compact" nav>
-      <v-list-item @click="contextMenuOpenModuleFolder">
-        <template #prepend>
-          <v-icon icon="mdi-folder-open" />
-        </template>
-        <v-list-item-title>打开文件夹</v-list-item-title>
-      </v-list-item>
-      <v-divider />
-      <v-list-item @click="contextMenuDeleteModule" class="text-error">
-        <template #prepend>
-          <v-icon icon="mdi-delete" color="error" />
-        </template>
-        <v-list-item-title>删除模块</v-list-item-title>
-      </v-list-item>
-    </v-list>
+    <v-card min-width="180" elevation="8" rounded="lg">
+      <v-list density="compact" nav class="pa-1">
+        <v-list-item @click="contextMenuOpenModuleFolder" rounded="lg">
+          <template #prepend>
+            <v-icon icon="mdi-folder-open" size="small" />
+          </template>
+          <v-list-item-title>打开文件夹</v-list-item-title>
+        </v-list-item>
+        <v-divider class="my-1" />
+        <v-list-item @click="contextMenuDeleteModule" class="text-error" rounded="lg">
+          <template #prepend>
+            <v-icon icon="mdi-delete" color="error" size="small" />
+          </template>
+          <v-list-item-title>删除模块</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-card>
   </v-menu>
 </template>
 
@@ -881,6 +906,31 @@ const contextMenuOpenExternal = () => {
 
 .list-container::-webkit-scrollbar {
   display: none;
+}
+</style>
+
+<style>
+/* 右键菜单全局样式 */
+.context-menu {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+.context-menu .v-card {
+  background: rgb(var(--v-theme-surface)) !important;
+}
+
+.context-menu .v-list-item {
+  min-height: 40px !important;
+  margin: 2px 0;
+}
+
+.context-menu .v-list-item:hover {
+  background: rgba(var(--v-theme-primary), 0.08) !important;
+}
+
+.context-menu .v-list-item-title {
+  font-size: 14px !important;
 }
 
 .expand-btn {

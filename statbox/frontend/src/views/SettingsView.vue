@@ -4,7 +4,7 @@ import { useTheme } from 'vuetify'
 import { themeOptions } from '../plugins/vuetify'
 import { useSelectionStore } from '../stores/selection'
 import { useSettingsStore } from '../stores/settings'
-import { GetConfigDir, GetTemplatesDir, OpenFolderInExplorer } from '../../wailsjs/go/main/App'
+import { GetConfigDir, GetTemplatesDir, GetDataDir, SetDataDir, OpenFolderInExplorer, OpenDirectoryDialog } from '../../wailsjs/go/main/App'
 
 const theme = useTheme()
 const selectionStore = useSelectionStore()
@@ -12,12 +12,17 @@ const settingsStore = useSettingsStore()
 
 const configDir = ref('')
 const templatesDir = ref('')
+const dataDir = ref('')
+const showDataDirDialog = ref(false)
+const newDataDir = ref('')
+const isMigrating = ref(false)
 
 // 加载路径配置
 const loadPaths = async () => {
   try {
     configDir.value = await GetConfigDir()
     templatesDir.value = await GetTemplatesDir()
+    dataDir.value = await GetDataDir()
   } catch (error) {
     console.error('加载路径配置失败:', error)
   }
@@ -31,6 +36,44 @@ const openFolder = async (path: string) => {
     console.error('打开文件夹失败:', error)
     alert('打开文件夹失败: ' + error)
   }
+}
+
+// 选择新数据目录
+const selectDataDir = async () => {
+  try {
+    const selectedPath = await OpenDirectoryDialog('选择数据存储位置')
+    if (selectedPath) {
+      newDataDir.value = selectedPath
+      showDataDirDialog.value = true
+    }
+  } catch (error) {
+    console.error('选择目录失败:', error)
+  }
+}
+
+// 确认更改数据目录
+const confirmChange = async () => {
+  if (!newDataDir.value) return
+  
+  isMigrating.value = true
+  try {
+    await SetDataDir(newDataDir.value)
+    showDataDirDialog.value = false
+    alert('数据目录已更改！应用将重新加载以使用新的数据目录。')
+    // 重新加载页面以应用新的数据目录
+    window.location.reload()
+  } catch (error) {
+    console.error('更改数据目录失败:', error)
+    alert('更改数据目录失败: ' + error)
+  } finally {
+    isMigrating.value = false
+  }
+}
+
+// 取消更改
+const cancelChange = () => {
+  showDataDirDialog.value = false
+  newDataDir.value = ''
 }
 
 // 监听选择变化，滚动到对应设置区域
@@ -119,41 +162,31 @@ const handleSave = () => {
 
         <v-list nav density="compact" class="pa-0">
           <v-list-item class="px-0">
-            <v-list-item-title>配置目录</v-list-item-title>
-            <v-list-item-subtitle>存储应用配置和设置</v-list-item-subtitle>
+            <v-list-item-title>数据目录</v-list-item-title>
+            <v-list-item-subtitle>存储所有应用数据（配置、模板、收藏夹等）</v-list-item-subtitle>
             <template #append>
               <v-btn
                 size="small"
                 variant="outlined"
                 prepend-icon="mdi-folder-open"
-                @click="openFolder(configDir)"
-                :disabled="!configDir"
+                @click="openFolder(dataDir)"
+                :disabled="!dataDir"
+                class="mr-2"
               >
                 打开
               </v-btn>
-            </template>
-          </v-list-item>
-          <div class="px-4 pb-2">
-            <v-chip size="small" color="surface-variant">{{ configDir || '加载中...' }}</v-chip>
-          </div>
-
-          <v-list-item class="px-0">
-            <v-list-item-title>模板目录</v-list-item-title>
-            <v-list-item-subtitle>存储代码模板文件</v-list-item-subtitle>
-            <template #append>
               <v-btn
                 size="small"
                 variant="outlined"
-                prepend-icon="mdi-folder-open"
-                @click="openFolder(templatesDir)"
-                :disabled="!templatesDir"
+                prepend-icon="mdi-folder-edit"
+                @click="selectDataDir"
               >
-                打开
+                修改
               </v-btn>
             </template>
           </v-list-item>
           <div class="px-4 pb-2">
-            <v-chip size="small" color="surface-variant">{{ templatesDir || '加载中...' }}</v-chip>
+            <v-chip size="small" color="surface-variant">{{ dataDir || '加载中...' }}</v-chip>
           </div>
         </v-list>
       </div>
@@ -216,6 +249,49 @@ const handleSave = () => {
         <v-btn color="primary" variant="flat" @click="handleSave">保存设置</v-btn>
       </div>
     </div>
+
+    <!-- 确认更改数据目录对话框 -->
+    <v-dialog v-model="showDataDirDialog" max-width="500" persistent>
+      <v-card>
+        <v-card-title class="text-h6">
+          <v-icon icon="mdi-folder-edit" class="mr-2" />
+          确认更改数据目录
+        </v-card-title>
+        <v-card-text>
+          <div class="mb-4">
+            <div class="text-subtitle-2 mb-2">当前数据目录：</div>
+            <v-chip size="small" color="surface-variant">{{ dataDir }}</v-chip>
+          </div>
+          <div class="mb-4">
+            <div class="text-subtitle-2 mb-2">新数据目录：</div>
+            <v-chip size="small" color="primary">{{ newDataDir }}</v-chip>
+          </div>
+          <v-alert type="info" variant="tonal" density="compact">
+            <div class="text-body-2">
+              应用将使用新目录中的数据。如果新目录中没有模板数据，将创建空的模板目录。
+            </div>
+          </v-alert>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            @click="cancelChange"
+            :disabled="isMigrating"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="flat"
+            @click="confirmChange"
+            :loading="isMigrating"
+          >
+            确认更改
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 

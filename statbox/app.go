@@ -19,7 +19,8 @@ type App struct {
 	configService   *services.ConfigService
 	startupService  *services.StartupService
 	templateService *services.TemplateService
-	configDir       string
+	configDir       string // 配置文件目录 (~/.statbox)
+	dataDir         string // 数据目录 (可自定义)
 	startHidden     bool
 }
 
@@ -28,11 +29,18 @@ func NewApp() *App {
 	// 获取用户配置目录
 	homeDir, _ := os.UserHomeDir()
 	configDir := filepath.Join(homeDir, ".statbox")
-	templatesDir := filepath.Join(configDir, "templates")
+	
+	// 创建配置服务
+	configService := services.NewConfigService(configDir)
+	
+	// 获取数据目录（可能是自定义的）
+	dataDir := configService.GetDataDir()
+	templatesDir := filepath.Join(dataDir, "templates")
 
 	return &App{
 		configDir:       configDir,
-		configService:   services.NewConfigService(configDir),
+		dataDir:         dataDir,
+		configService:   configService,
 		templateService: services.NewTemplateService(templatesDir),
 	}
 }
@@ -208,6 +216,13 @@ func (a *App) OpenTemplateFileFolder(relativePath string) error {
 	return a.OpenFolderInExplorer(folderPath)
 }
 
+// OpenDirectoryDialog 打开目录选择对话框
+func (a *App) OpenDirectoryDialog(title string) (string, error) {
+	return wailsRuntime.OpenDirectoryDialog(a.ctx, wailsRuntime.OpenDialogOptions{
+		Title: title,
+	})
+}
+
 // GetConfigDir 获取配置目录路径
 func (a *App) GetConfigDir() string {
 	return a.configDir
@@ -216,4 +231,55 @@ func (a *App) GetConfigDir() string {
 // GetTemplatesDir 获取模板目录路径
 func (a *App) GetTemplatesDir() string {
 	return a.templateService.GetModulePath("")
+}
+
+// GetDataDir 获取数据目录路径
+func (a *App) GetDataDir() string {
+	return a.dataDir
+}
+
+// SetDataDir 设置数据目录路径
+func (a *App) SetDataDir(newDataDir string) error {
+	// 验证新路径
+	if newDataDir == "" {
+		return fmt.Errorf("数据目录路径不能为空")
+	}
+
+	// 检查新路径是否与当前路径相同
+	if newDataDir == a.dataDir {
+		return fmt.Errorf("新路径与当前路径相同")
+	}
+
+	// 检查选择的是否是 templates 文件夹本身
+	// 如果选择的目录名是 "templates"，则使用其父目录作为数据目录
+	if filepath.Base(newDataDir) == "templates" {
+		newDataDir = filepath.Dir(newDataDir)
+	}
+
+	// 确保新目录存在
+	if err := os.MkdirAll(newDataDir, 0755); err != nil {
+		return fmt.Errorf("无法创建目录: %v", err)
+	}
+
+	// 确保必要的子目录存在
+	templatesDir := filepath.Join(newDataDir, "templates")
+	if err := os.MkdirAll(templatesDir, 0755); err != nil {
+		return fmt.Errorf("无法创建模板目录: %v", err)
+	}
+
+	// 更新配置
+	config, err := a.configService.LoadConfig()
+	if err != nil {
+		return err
+	}
+	config.DataDir = newDataDir
+	if err := a.configService.SaveConfig(config); err != nil {
+		return err
+	}
+
+	// 更新应用状态
+	a.dataDir = newDataDir
+	a.templateService = services.NewTemplateService(templatesDir)
+
+	return nil
 }
