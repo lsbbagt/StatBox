@@ -1,9 +1,11 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue'
 import { useSelectionStore } from '../stores/selection'
+import { useSettingsStore } from '../stores/settings'
 import { OpenFileWithDefault, GetTemplatePath } from '../../wailsjs/go/main/App'
 
 const selectionStore = useSelectionStore()
+const settingsStore = useSettingsStore()
 
 const code = ref('')
 const fileName = ref('选择一个模板')
@@ -77,7 +79,7 @@ const languageIcon = computed(() => {
 
     <!-- 代码编辑器 -->
     <div class="code-editor flex-grow-1 overflow-auto" style="background: rgb(var(--v-theme-background)); padding: 16px;">
-      <pre style="font-family: 'Consolas', 'Monaco', monospace; font-size: 14px; line-height: 1.7; color: rgb(var(--v-theme-on-surface));">{{ code || '// 选择左侧模板查看代码' }}</pre>
+      <pre :style="{ fontFamily: 'Consolas, Monaco, monospace', fontSize: settingsStore.fontSize + 'px', lineHeight: 1.7, color: 'rgb(var(--v-theme-on-surface))' }">{{ code || '// 选择左侧模板查看代码' }}</pre>
     </div>
   </div>
 </template>

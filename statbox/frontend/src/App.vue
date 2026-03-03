@@ -79,5 +79,33 @@ html {
 
 .main-content {
   height: calc(100vh - 40px);
+  overflow: hidden !important;
+}
+
+.main-content > .v-container {
+  overflow: hidden !important;
+}
+
+.main-content .v-row {
+  overflow: hidden !important;
+}
+
+/* 中间主面板允许滚动 - 使用更强选择器 */
+.main-content .v-col:first-child,
+.main-content .v-row > .v-col:first-child {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: 100%;
+}
+
+/* 右侧面板不滚动 */
+.main-content .v-col:last-child,
+.main-content .v-row > .v-col:last-child {
+  overflow: hidden !important;
+}
+
+/* 隐藏内部组件的滚动条 */
+.v-list {
+  overflow: visible !important;
 }
 </style>

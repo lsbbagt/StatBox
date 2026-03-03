@@ -231,8 +231,10 @@ const filteredCommands = computed(() => {
 
 const settings = ref([
   { id: 'general', name: '常规设置', icon: 'mdi-cog' },
-  { id: 'appearance', name: '外观', icon: 'mdi-palette' },
+  { id: 'storage', name: '数据存储位置', icon: 'mdi-database' },
   { id: 'shortcuts', name: '快捷键', icon: 'mdi-keyboard' },
+  { id: 'browser', name: '浏览器', icon: 'mdi-web' },
+  { id: 'appearance', name: '外观', icon: 'mdi-palette' },
 ])
 
 // 展开的文件夹
@@ -617,7 +619,6 @@ const contextMenuOpenExternal = () => {
           <template #activator="{ props: activatorProps }">
             <v-list-item
               v-bind="activatorProps"
-              :prepend-icon="getModuleIcon(module.name)"
               :title="module.name"
               @contextmenu.prevent="showModuleContextMenu($event, module.name)"
             >
@@ -637,7 +638,6 @@ const contextMenuOpenExternal = () => {
             :key="file.path"
             :title="file.name"
             :subtitle="file.language"
-            :prepend-icon="getFileIcon(file.language)"
             rounded="lg"
             class="ml-4 mb-1"
             link

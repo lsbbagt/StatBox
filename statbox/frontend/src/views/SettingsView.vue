@@ -3,21 +3,12 @@ import { ref, watch, onMounted } from 'vue'
 import { useTheme } from 'vuetify'
 import { themeOptions } from '../plugins/vuetify'
 import { useSelectionStore } from '../stores/selection'
+import { useSettingsStore } from '../stores/settings'
 import { GetConfigDir, GetTemplatesDir, OpenFolderInExplorer } from '../../wailsjs/go/main/App'
 
 const theme = useTheme()
 const selectionStore = useSelectionStore()
-
-const settings = ref({
-  startupWithSystem: true,
-  minimizeToTray: true,
-  silentStartup: true,
-  commandHotkey: '~',
-  commandScope: 'internal',
-  defaultBrowser: 'internal',
-  theme: 'statboxLight',
-  fontSize: 14
-})
+const settingsStore = useSettingsStore()
 
 const configDir = ref('')
 const templatesDir = ref('')
@@ -53,249 +44,274 @@ watch(() => selectionStore.selectedItem, (item) => {
 })
 
 // 监听主题变化
-watch(() => settings.value.theme, (newTheme) => {
+watch(() => settingsStore.theme, (newTheme) => {
   theme.global.name.value = newTheme
 })
 
-// 组件挂载时加载路径
+// 组件挂载时加载路径和设置
 onMounted(() => {
   loadPaths()
+  settingsStore.loadSettings()
 })
 </script>
 
 <template>
-  <div class="settings-view h-100 overflow-auto">
-    <v-container class="pa-4" style="max-width: 800px;">
-      <v-card elevation="0">
-        <v-card-title class="text-h5 pb-2">
-          <v-icon icon="mdi-cog" color="primary" class="mr-2" />
-          设置
-        </v-card-title>
+  <div class="settings-view">
+    <div class="settings-content">
+      <div class="settings-header">
+        <v-icon icon="mdi-cog" color="primary" class="mr-2" />
+        <span class="text-h5">设置</span>
+      </div>
 
-        <v-divider class="mb-4" />
+      <v-divider class="mb-4" />
 
-        <!-- 常规设置 -->
-        <v-card-text class="pa-0">
-          <div id="general">
-            <h3 class="text-subtitle-1 mb-3">常规设置</h3>
+      <!-- 常规设置 -->
+      <div id="general" class="settings-section">
+        <h3 class="text-subtitle-1 mb-3">常规设置</h3>
 
-            <v-list nav density="compact" class="pa-0">
-              <v-list-item class="px-0">
-                <v-list-item-title>开机自启动</v-list-item-title>
-                <v-list-item-subtitle>系统启动时自动运行 StatBox</v-list-item-subtitle>
-                <template #append>
-                  <v-switch
-                    v-model="settings.startupWithSystem"
-                    color="primary"
-                    hide-details
-                  />
-                </template>
-              </v-list-item>
+        <v-list nav density="compact" class="pa-0">
+          <v-list-item class="px-0">
+            <v-list-item-title>开机自启动</v-list-item-title>
+            <v-list-item-subtitle>系统启动时自动运行 StatBox</v-list-item-subtitle>
+            <template #append>
+              <v-switch
+                v-model="settingsStore.startupWithSystem"
+                color="primary"
+                hide-details
+              />
+            </template>
+          </v-list-item>
 
-              <v-list-item class="px-0">
-                <v-list-item-title>静默启动</v-list-item-title>
-                <v-list-item-subtitle>开机启动时最小化到托盘，不显示窗口</v-list-item-subtitle>
-                <template #append>
-                  <v-switch
-                    v-model="settings.silentStartup"
-                    color="primary"
-                    hide-details
-                  />
-                </template>
-              </v-list-item>
+          <v-list-item class="px-0">
+            <v-list-item-title>静默启动</v-list-item-title>
+            <v-list-item-subtitle>开机启动时最小化到托盘，不显示窗口</v-list-item-subtitle>
+            <template #append>
+              <v-switch
+                v-model="settingsStore.silentStartup"
+                color="primary"
+                hide-details
+              />
+            </template>
+          </v-list-item>
 
-              <v-list-item class="px-0">
-                <v-list-item-title>最小化到托盘</v-list-item-title>
-                <v-list-item-subtitle>关闭窗口时最小化到系统托盘</v-list-item-subtitle>
-                <template #append>
-                  <v-switch
-                    v-model="settings.minimizeToTray"
-                    color="primary"
-                    hide-details
-                  />
-                </template>
-              </v-list-item>
-            </v-list>
+          <v-list-item class="px-0">
+            <v-list-item-title>最小化到托盘</v-list-item-title>
+            <v-list-item-subtitle>关闭窗口时最小化到系统托盘</v-list-item-subtitle>
+            <template #append>
+              <v-switch
+                v-model="settingsStore.minimizeToTray"
+                color="primary"
+                hide-details
+              />
+            </template>
+          </v-list-item>
+        </v-list>
+      </div>
+
+      <v-divider class="my-4" />
+
+      <!-- 数据存储位置 -->
+      <div id="storage" class="settings-section">
+        <h3 class="text-subtitle-1 mb-3">数据存储位置</h3>
+
+        <v-list nav density="compact" class="pa-0">
+          <v-list-item class="px-0">
+            <v-list-item-title>配置目录</v-list-item-title>
+            <v-list-item-subtitle>存储应用配置和设置</v-list-item-subtitle>
+            <template #append>
+              <v-btn
+                size="small"
+                variant="outlined"
+                prepend-icon="mdi-folder-open"
+                @click="openFolder(configDir)"
+                :disabled="!configDir"
+              >
+                打开
+              </v-btn>
+            </template>
+          </v-list-item>
+          <div class="px-4 pb-2">
+            <v-chip size="small" color="surface-variant">{{ configDir || '加载中...' }}</v-chip>
           </div>
 
-          <v-divider class="my-4" />
+          <v-list-item class="px-0">
+            <v-list-item-title>模板目录</v-list-item-title>
+            <v-list-item-subtitle>存储代码模板文件</v-list-item-subtitle>
+            <template #append>
+              <v-btn
+                size="small"
+                variant="outlined"
+                prepend-icon="mdi-folder-open"
+                @click="openFolder(templatesDir)"
+                :disabled="!templatesDir"
+              >
+                打开
+              </v-btn>
+            </template>
+          </v-list-item>
+          <div class="px-4 pb-2">
+            <v-chip size="small" color="surface-variant">{{ templatesDir || '加载中...' }}</v-chip>
+          </div>
+        </v-list>
+      </div>
 
-          <!-- 路径设置 -->
-          <div>
-            <h3 class="text-subtitle-1 mb-3">数据存储位置</h3>
+      <v-divider class="my-4" />
 
-            <v-list nav density="compact" class="pa-0">
-              <v-list-item class="px-0">
-                <v-list-item-title>配置目录</v-list-item-title>
-                <v-list-item-subtitle>存储应用配置和设置</v-list-item-subtitle>
-                <template #append>
-                  <v-btn
-                    size="small"
-                    variant="outlined"
-                    prepend-icon="mdi-folder-open"
-                    @click="openFolder(configDir)"
-                    :disabled="!configDir"
-                  >
-                    打开
-                  </v-btn>
-                </template>
-              </v-list-item>
-              <div class="px-4 pb-2">
-                <v-chip size="small" color="surface-variant">{{ configDir || '加载中...' }}</v-chip>
-              </div>
+      <!-- 快捷键设置 -->
+      <div id="shortcuts" class="settings-section">
+        <h3 class="text-subtitle-1 mb-3">快捷键</h3>
 
-              <v-list-item class="px-0">
-                <v-list-item-title>模板目录</v-list-item-title>
-                <v-list-item-subtitle>存储代码模板文件</v-list-item-subtitle>
-                <template #append>
-                  <v-btn
-                    size="small"
-                    variant="outlined"
-                    prepend-icon="mdi-folder-open"
-                    @click="openFolder(templatesDir)"
-                    :disabled="!templatesDir"
-                  >
-                    打开
-                  </v-btn>
-                </template>
-              </v-list-item>
-              <div class="px-4 pb-2">
-                <v-chip size="small" color="surface-variant">{{ templatesDir || '加载中...' }}</v-chip>
-              </div>
-            </v-list>
+        <v-list nav density="compact" class="pa-0">
+          <v-list-item class="px-0">
+            <v-list-item-title>命令库快捷键</v-list-item-title>
+            <v-list-item-subtitle>按此键唤醒命令库</v-list-item-subtitle>
+            <template #append>
+              <v-text-field
+                v-model="settingsStore.commandHotkey"
+                density="compact"
+                variant="outlined"
+                style="width: 100px;"
+                hide-details
+              />
+            </template>
+          </v-list-item>
+
+          <v-list-item class="px-0">
+            <v-list-item-title>唤醒范围</v-list-item-title>
+            <v-list-item-subtitle>命令库在何处可用</v-list-item-subtitle>
+            <template #append>
+              <v-select
+                v-model="settingsStore.commandScope"
+                :items="[
+                  { title: '仅应用内', value: 'internal' },
+                  { title: '全局', value: 'global' }
+                ]"
+                density="compact"
+                variant="outlined"
+                style="width: 150px;"
+                hide-details
+              />
+            </template>
+          </v-list-item>
+        </v-list>
+      </div>
+
+      <v-divider class="my-4" />
+
+      <!-- 浏览器设置 -->
+      <div id="browser" class="settings-section">
+        <h3 class="text-subtitle-1 mb-3">浏览器</h3>
+
+        <v-list nav density="compact" class="pa-0">
+          <v-list-item class="px-0">
+            <v-list-item-title>默认浏览器</v-list-item-title>
+            <v-list-item-subtitle>打开收藏时的默认行为</v-list-item-subtitle>
+            <template #append>
+              <v-select
+                v-model="settingsStore.defaultBrowser"
+                :items="[
+                  { title: '应用内浏览器', value: 'internal' },
+                  { title: '系统默认浏览器', value: 'external' }
+                ]"
+                density="compact"
+                variant="outlined"
+                style="width: 180px;"
+                hide-details
+              />
+            </template>
+          </v-list-item>
+        </v-list>
+      </div>
+
+      <v-divider class="my-4" />
+
+      <!-- 外观设置 -->
+      <div id="appearance" class="settings-section">
+        <h3 class="text-subtitle-1 mb-3">外观</h3>
+
+        <v-list nav density="compact" class="pa-0">
+          <!-- 颜色主题 -->
+          <v-list-item class="px-0">
+            <v-list-item-title>颜色主题</v-list-item-title>
+            <v-list-item-subtitle>选择你喜欢的主题颜色</v-list-item-subtitle>
+          </v-list-item>
+
+          <div class="d-flex flex-wrap ga-2 mb-4 px-1">
+            <v-btn
+              v-for="option in themeOptions"
+              :key="option.value"
+              :style="{
+                border: settingsStore.theme === option.value ? '3px solid ' + option.color : '2px solid #E1E8ED',
+                backgroundColor: settingsStore.theme === option.value ? option.color + '20' : 'transparent'
+              }"
+              variant="outlined"
+              size="small"
+              class="text-none"
+              @click="settingsStore.theme = option.value"
+            >
+              <v-icon :color="option.color" class="mr-1">mdi-palette</v-icon>
+              {{ option.title }}
+            </v-btn>
           </div>
 
-          <v-divider class="my-4" />
+          <v-list-item class="px-0">
+            <v-list-item-title>字体大小</v-list-item-title>
+            <v-list-item-subtitle>编辑器和终端的字体大小</v-list-item-subtitle>
+            <template #append>
+              <v-slider
+                v-model="settingsStore.fontSize"
+                :min="10"
+                :max="20"
+                :step="1"
+                thumb-label
+                color="primary"
+                style="width: 200px;"
+                hide-details
+              />
+            </template>
+          </v-list-item>
+        </v-list>
+      </div>
 
-          <!-- 快捷键设置 -->
-          <div id="shortcuts">
-            <h3 class="text-subtitle-1 mb-3">快捷键</h3>
+      <v-divider class="my-4" />
 
-            <v-list nav density="compact" class="pa-0">
-              <v-list-item class="px-0">
-                <v-list-item-title>命令库快捷键</v-list-item-title>
-                <v-list-item-subtitle>按此键唤醒命令库</v-list-item-subtitle>
-                <template #append>
-                  <v-text-field
-                    v-model="settings.commandHotkey"
-                    density="compact"
-                    variant="outlined"
-                    style="width: 100px;"
-                    hide-details
-                  />
-                </template>
-              </v-list-item>
-
-              <v-list-item class="px-0">
-                <v-list-item-title>唤醒范围</v-list-item-title>
-                <v-list-item-subtitle>命令库在何处可用</v-list-item-subtitle>
-                <template #append>
-                  <v-select
-                    v-model="settings.commandScope"
-                    :items="[
-                      { title: '仅应用内', value: 'internal' },
-                      { title: '全局', value: 'global' }
-                    ]"
-                    density="compact"
-                    variant="outlined"
-                    style="width: 150px;"
-                    hide-details
-                  />
-                </template>
-              </v-list-item>
-            </v-list>
-          </div>
-
-          <v-divider class="my-4" />
-
-          <!-- 浏览器设置 -->
-          <h3 class="text-subtitle-1 mb-3">浏览器</h3>
-
-          <v-list nav density="compact" class="pa-0">
-            <v-list-item class="px-0">
-              <v-list-item-title>默认浏览器</v-list-item-title>
-              <v-list-item-subtitle>打开收藏时的默认行为</v-list-item-subtitle>
-              <template #append>
-                <v-select
-                  v-model="settings.defaultBrowser"
-                  :items="[
-                    { title: '应用内浏览器', value: 'internal' },
-                    { title: '系统默认浏览器', value: 'external' }
-                  ]"
-                  density="compact"
-                  variant="outlined"
-                  style="width: 180px;"
-                  hide-details
-                />
-              </template>
-            </v-list-item>
-          </v-list>
-
-          <v-divider class="my-4" />
-
-          <!-- 外观设置 -->
-          <div id="appearance">
-            <h3 class="text-subtitle-1 mb-3">外观</h3>
-
-            <v-list nav density="compact" class="pa-0">
-              <!-- 颜色主题 -->
-              <v-list-item class="px-0">
-                <v-list-item-title>颜色主题</v-list-item-title>
-                <v-list-item-subtitle>选择你喜欢的主题颜色</v-list-item-subtitle>
-              </v-list-item>
-
-              <div class="d-flex flex-wrap ga-2 mb-4 px-1">
-                <v-btn
-                  v-for="option in themeOptions"
-                  :key="option.value"
-                  :style="{
-                    border: settings.theme === option.value ? '3px solid ' + option.color : '2px solid #E1E8ED',
-                    backgroundColor: settings.theme === option.value ? option.color + '20' : 'transparent'
-                  }"
-                  variant="outlined"
-                  size="small"
-                  class="text-none"
-                  @click="settings.theme = option.value"
-                >
-                  <v-icon :color="option.color" class="mr-1">mdi-palette</v-icon>
-                  {{ option.title }}
-                </v-btn>
-              </div>
-
-              <v-list-item class="px-0">
-                <v-list-item-title>字体大小</v-list-item-title>
-                <v-list-item-subtitle>编辑器和终端的字体大小</v-list-item-subtitle>
-                <template #append>
-                  <v-slider
-                    v-model="settings.fontSize"
-                    :min="10"
-                    :max="20"
-                    :step="1"
-                    thumb-label
-                    color="primary"
-                    style="width: 200px;"
-                    hide-details
-                  />
-                </template>
-              </v-list-item>
-            </v-list>
-          </div>
-
-          <v-divider class="my-4" />
-
-          <!-- 操作按钮 -->
-          <div class="d-flex justify-end pb-4">
-            <v-btn variant="outlined" class="mr-2">重置</v-btn>
-            <v-btn color="primary" variant="flat">保存设置</v-btn>
-          </div>
-        </v-card-text>
-      </v-card>
-    </v-container>
+      <!-- 操作按钮 -->
+      <div class="d-flex justify-end pb-4">
+        <v-btn variant="outlined" class="mr-2">重置</v-btn>
+        <v-btn color="primary" variant="flat">保存设置</v-btn>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .settings-view {
-  overflow-y: auto;
+  height: 100%;
+  width: 100%;
+}
+
+.settings-content {
+  max-width: 800px;
+  padding: 16px;
+  margin: 0 auto;
+}
+
+.settings-header {
+  display: flex;
+  align-items: center;
+  padding-bottom: 8px;
+}
+
+.settings-section {
+  margin-bottom: 8px;
+}
+
+/* 隐藏v-list内部滚动条 */
+.settings-view :deep(.v-list) {
+  overflow: visible !important;
+}
+
+.settings-view :deep(.v-list::-webkit-scrollbar) {
+  display: none;
 }
 </style>
