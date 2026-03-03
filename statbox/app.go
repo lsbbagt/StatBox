@@ -50,6 +50,9 @@ func (a *App) startup(ctx context.Context) {
 
 	// 确保配置目录存在
 	a.configService.EnsureConfigDir()
+	
+	// 确保模板目录存在
+	a.templateService.EnsureTemplatesDir()
 
 	// 初始化开机自启动服务
 	startupService, err := services.NewStartupService("StatBox")
@@ -169,4 +172,71 @@ func (a *App) OpenFileWithDefault(filePath string) error {
 	}
 
 	return cmd.Start()
+}
+
+// GetTemplatePath 获取模板文件的完整路径
+func (a *App) GetTemplatePath(relativePath string) string {
+	return a.templateService.GetFilePath(relativePath)
+}
+
+// GetTemplateModules 获取所有模板模块
+func (a *App) GetTemplateModules() ([]services.TemplateModule, error) {
+	return a.templateService.GetModules()
+}
+
+// CreateTemplateModule 创建新模板模块
+func (a *App) CreateTemplateModule(name string) error {
+	return a.templateService.CreateModule(name)
+}
+
+// DeleteTemplateModule 删除模板模块
+func (a *App) DeleteTemplateModule(name string) error {
+	return a.templateService.DeleteModule(name)
+}
+
+// DeleteTemplateFile 删除模板文件
+func (a *App) DeleteTemplateFile(relativePath string) error {
+	return a.templateService.DeleteFile(relativePath)
+}
+
+// CreateTemplateFile 创建模板文件
+func (a *App) CreateTemplateFile(module string, fileName string, content string) error {
+	return a.templateService.CreateFile(module, fileName, content)
+}
+
+// OpenFolderInExplorer 在资源管理器中打开文件夹
+func (a *App) OpenFolderInExplorer(folderPath string) error {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("explorer", folderPath)
+	case "darwin":
+		cmd = exec.Command("open", folderPath)
+	default: // linux
+		cmd = exec.Command("xdg-open", folderPath)
+	}
+	return cmd.Start()
+}
+
+// OpenTemplateModuleFolder 在资源管理器中打开模块文件夹
+func (a *App) OpenTemplateModuleFolder(moduleName string) error {
+	folderPath := a.templateService.GetModulePath(moduleName)
+	return a.OpenFolderInExplorer(folderPath)
+}
+
+// OpenTemplateFileFolder 在资源管理器中打开文件所在文件夹
+func (a *App) OpenTemplateFileFolder(relativePath string) error {
+	filePath := a.templateService.GetFilePath(relativePath)
+	folderPath := filepath.Dir(filePath)
+	return a.OpenFolderInExplorer(folderPath)
+}
+
+// GetConfigDir 获取配置目录路径
+func (a *App) GetConfigDir() string {
+	return a.configDir
+}
+
+// GetTemplatesDir 获取模板目录路径
+func (a *App) GetTemplatesDir() string {
+	return a.templateService.GetModulePath("")
 }

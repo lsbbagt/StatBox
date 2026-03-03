@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue'
 import { useSelectionStore } from '../stores/selection'
-import { OpenFileWithDefault } from '../../wailsjs/go/main/App'
+import { OpenFileWithDefault, GetTemplatePath } from '../../wailsjs/go/main/App'
 
 const selectionStore = useSelectionStore()
 
@@ -35,11 +35,12 @@ const copyCode = async () => {
 
 // 在外部IDE打开（使用系统默认应用）
 const openInExternalIDE = async () => {
-  // 获取模板文件路径
   const item = selectionStore.selectedItem
-  if (item?.type === 'template' && item.data?.filePath) {
+  if (item?.type === 'template' && item.data?.path) {
     try {
-      await OpenFileWithDefault(item.data.filePath)
+      // 获取完整文件路径
+      const fullPath = await GetTemplatePath(item.data.path)
+      await OpenFileWithDefault(fullPath)
     } catch (error) {
       console.error('打开文件失败:', error)
       alert('打开文件失败: ' + error)
