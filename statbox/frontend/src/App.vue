@@ -5,10 +5,9 @@ import Sidebar from './components/Sidebar.vue'
 import RightPanel from './components/RightPanel.vue'
 import BookmarksView from './views/BookmarksView.vue'
 import TemplatesView from './views/TemplatesView.vue'
-import CommandsView from './views/CommandsView.vue'
 import SettingsView from './views/SettingsView.vue'
 
-type ModuleType = 'bookmarks' | 'templates' | 'commands' | 'settings'
+type ModuleType = 'bookmarks' | 'templates' | 'settings'
 
 const sidebarVisible = ref(true)
 const rightPanelVisible = ref(true)
@@ -18,7 +17,6 @@ const currentView = computed(() => {
   switch (activeModule.value) {
     case 'bookmarks': return markRaw(BookmarksView)
     case 'templates': return markRaw(TemplatesView)
-    case 'commands': return markRaw(CommandsView)
     case 'settings': return markRaw(SettingsView)
     default: return markRaw(BookmarksView)
   }

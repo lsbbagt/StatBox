@@ -18,7 +18,6 @@ type WindowConfig struct {
 type FeatureConfig struct {
 	StartupWithSystem bool   `json:"startupWithSystem"`
 	MinimizeToTray    bool   `json:"minimizeToTray"`
-	CommandHotkey     string `json:"commandHotkey"`
 	CommandScope      string `json:"commandScope"`      // "global" or "internal"
 	DefaultBrowser    string `json:"defaultBrowser"`    // "internal" or "external"
 }
@@ -106,7 +105,6 @@ func (s *ConfigService) defaultConfig() *Config {
 		Features: FeatureConfig{
 			StartupWithSystem: true,
 			MinimizeToTray:    true,
-			CommandHotkey:     "~",
 			CommandScope:      "internal",
 			DefaultBrowser:    "internal",
 		},

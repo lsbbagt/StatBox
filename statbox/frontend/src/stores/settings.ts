@@ -6,10 +6,14 @@ export const useSettingsStore = defineStore('settings', () => {
   const theme = ref('statboxLight')
   const startupWithSystem = ref(true)
   const minimizeToTray = ref(true)
-  const silentStartup = ref(true)
-  const commandHotkey = ref('~')
-  const commandScope = ref<'internal' | 'global'>('internal')
-  const defaultBrowser = ref<'internal' | 'external'>('internal')
+
+  // 默认设置
+  const defaultSettings = {
+    fontSize: 14,
+    theme: 'statboxLight',
+    startupWithSystem: true,
+    minimizeToTray: true
+  }
 
   // 从本地存储加载设置
   const loadSettings = () => {
@@ -17,14 +21,10 @@ export const useSettingsStore = defineStore('settings', () => {
       const saved = localStorage.getItem('statbox-settings')
       if (saved) {
         const data = JSON.parse(saved)
-        fontSize.value = data.fontSize ?? 14
-        theme.value = data.theme ?? 'statboxLight'
-        startupWithSystem.value = data.startupWithSystem ?? true
-        minimizeToTray.value = data.minimizeToTray ?? true
-        silentStartup.value = data.silentStartup ?? true
-        commandHotkey.value = data.commandHotkey ?? '~'
-        commandScope.value = data.commandScope ?? 'internal'
-        defaultBrowser.value = data.defaultBrowser ?? 'internal'
+        fontSize.value = data.fontSize ?? defaultSettings.fontSize
+        theme.value = data.theme ?? defaultSettings.theme
+        startupWithSystem.value = data.startupWithSystem ?? defaultSettings.startupWithSystem
+        minimizeToTray.value = data.minimizeToTray ?? defaultSettings.minimizeToTray
       }
     } catch (error) {
       console.error('加载设置失败:', error)
@@ -38,20 +38,27 @@ export const useSettingsStore = defineStore('settings', () => {
         fontSize: fontSize.value,
         theme: theme.value,
         startupWithSystem: startupWithSystem.value,
-        minimizeToTray: minimizeToTray.value,
-        silentStartup: silentStartup.value,
-        commandHotkey: commandHotkey.value,
-        commandScope: commandScope.value,
-        defaultBrowser: defaultBrowser.value
+        minimizeToTray: minimizeToTray.value
       }
       localStorage.setItem('statbox-settings', JSON.stringify(data))
+      console.log('设置已保存')
     } catch (error) {
       console.error('保存设置失败:', error)
     }
   }
 
+  // 重置设置为默认值
+  const resetSettings = () => {
+    fontSize.value = defaultSettings.fontSize
+    theme.value = defaultSettings.theme
+    startupWithSystem.value = defaultSettings.startupWithSystem
+    minimizeToTray.value = defaultSettings.minimizeToTray
+    saveSettings()
+    console.log('设置已重置为默认值')
+  }
+
   // 监听变化自动保存
-  watch([fontSize, theme, startupWithSystem, minimizeToTray, silentStartup, commandHotkey, commandScope, defaultBrowser], () => {
+  watch([fontSize, theme, startupWithSystem, minimizeToTray], () => {
     saveSettings()
   })
 
@@ -60,11 +67,8 @@ export const useSettingsStore = defineStore('settings', () => {
     theme,
     startupWithSystem,
     minimizeToTray,
-    silentStartup,
-    commandHotkey,
-    commandScope,
-    defaultBrowser,
     loadSettings,
-    saveSettings
+    saveSettings,
+    resetSettings
   }
 })

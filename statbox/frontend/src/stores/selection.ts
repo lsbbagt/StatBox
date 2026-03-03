@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 export interface SelectedItem {
-  type: 'bookmark' | 'template' | 'command' | 'setting'
+  type: 'bookmark' | 'template' | 'setting'
   data: any
 }
 

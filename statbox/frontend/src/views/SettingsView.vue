@@ -53,6 +53,21 @@ onMounted(() => {
   loadPaths()
   settingsStore.loadSettings()
 })
+
+// 重置设置
+const handleReset = () => {
+  if (confirm('确定要重置所有设置为默认值吗？')) {
+    settingsStore.resetSettings()
+    // 更新主题
+    theme.global.name.value = settingsStore.theme
+  }
+}
+
+// 保存设置
+const handleSave = () => {
+  settingsStore.saveSettings()
+  alert('设置已保存')
+}
 </script>
 
 <template>
@@ -72,7 +87,7 @@ onMounted(() => {
         <v-list nav density="compact" class="pa-0">
           <v-list-item class="px-0">
             <v-list-item-title>开机自启动</v-list-item-title>
-            <v-list-item-subtitle>系统启动时自动运行 StatBox</v-list-item-subtitle>
+            <v-list-item-subtitle>系统启动时自动运行 StatBox（静默启动）</v-list-item-subtitle>
             <template #append>
               <v-switch
                 v-model="settingsStore.startupWithSystem"
@@ -83,20 +98,8 @@ onMounted(() => {
           </v-list-item>
 
           <v-list-item class="px-0">
-            <v-list-item-title>静默启动</v-list-item-title>
-            <v-list-item-subtitle>开机启动时最小化到托盘，不显示窗口</v-list-item-subtitle>
-            <template #append>
-              <v-switch
-                v-model="settingsStore.silentStartup"
-                color="primary"
-                hide-details
-              />
-            </template>
-          </v-list-item>
-
-          <v-list-item class="px-0">
-            <v-list-item-title>最小化到托盘</v-list-item-title>
-            <v-list-item-subtitle>关闭窗口时最小化到系统托盘</v-list-item-subtitle>
+            <v-list-item-title>关闭后最小化到托盘</v-list-item-title>
+            <v-list-item-subtitle>关闭窗口时最小化到系统托盘而不是退出</v-list-item-subtitle>
             <template #append>
               <v-switch
                 v-model="settingsStore.minimizeToTray"
@@ -157,74 +160,6 @@ onMounted(() => {
 
       <v-divider class="my-4" />
 
-      <!-- 快捷键设置 -->
-      <div id="shortcuts" class="settings-section">
-        <h3 class="text-subtitle-1 mb-3">快捷键</h3>
-
-        <v-list nav density="compact" class="pa-0">
-          <v-list-item class="px-0">
-            <v-list-item-title>命令库快捷键</v-list-item-title>
-            <v-list-item-subtitle>按此键唤醒命令库</v-list-item-subtitle>
-            <template #append>
-              <v-text-field
-                v-model="settingsStore.commandHotkey"
-                density="compact"
-                variant="outlined"
-                style="width: 100px;"
-                hide-details
-              />
-            </template>
-          </v-list-item>
-
-          <v-list-item class="px-0">
-            <v-list-item-title>唤醒范围</v-list-item-title>
-            <v-list-item-subtitle>命令库在何处可用</v-list-item-subtitle>
-            <template #append>
-              <v-select
-                v-model="settingsStore.commandScope"
-                :items="[
-                  { title: '仅应用内', value: 'internal' },
-                  { title: '全局', value: 'global' }
-                ]"
-                density="compact"
-                variant="outlined"
-                style="width: 150px;"
-                hide-details
-              />
-            </template>
-          </v-list-item>
-        </v-list>
-      </div>
-
-      <v-divider class="my-4" />
-
-      <!-- 浏览器设置 -->
-      <div id="browser" class="settings-section">
-        <h3 class="text-subtitle-1 mb-3">浏览器</h3>
-
-        <v-list nav density="compact" class="pa-0">
-          <v-list-item class="px-0">
-            <v-list-item-title>默认浏览器</v-list-item-title>
-            <v-list-item-subtitle>打开收藏时的默认行为</v-list-item-subtitle>
-            <template #append>
-              <v-select
-                v-model="settingsStore.defaultBrowser"
-                :items="[
-                  { title: '应用内浏览器', value: 'internal' },
-                  { title: '系统默认浏览器', value: 'external' }
-                ]"
-                density="compact"
-                variant="outlined"
-                style="width: 180px;"
-                hide-details
-              />
-            </template>
-          </v-list-item>
-        </v-list>
-      </div>
-
-      <v-divider class="my-4" />
-
       <!-- 外观设置 -->
       <div id="appearance" class="settings-section">
         <h3 class="text-subtitle-1 mb-3">外观</h3>
@@ -277,8 +212,8 @@ onMounted(() => {
 
       <!-- 操作按钮 -->
       <div class="d-flex justify-end pb-4">
-        <v-btn variant="outlined" class="mr-2">重置</v-btn>
-        <v-btn color="primary" variant="flat">保存设置</v-btn>
+        <v-btn variant="outlined" class="mr-2" @click="handleReset">重置</v-btn>
+        <v-btn color="primary" variant="flat" @click="handleSave">保存设置</v-btn>
       </div>
     </div>
   </div>

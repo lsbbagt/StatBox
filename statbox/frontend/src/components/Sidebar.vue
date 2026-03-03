@@ -17,7 +17,6 @@ const collapsed = ref(false)
 const modules: ModuleItem[] = [
   { id: 'bookmarks', name: '收藏夹', icon: 'mdi-folder-star' },
   { id: 'templates', name: '代码模板', icon: 'mdi-code-tags' },
-  { id: 'commands', name: '命令库', icon: 'mdi-keyboard' },
   { id: 'settings', name: '设置', icon: 'mdi-cog' }
 ]
 

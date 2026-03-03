@@ -1,4 +1,4 @@
-export type ModuleType = 'bookmarks' | 'templates' | 'commands' | 'settings'
+export type ModuleType = 'bookmarks' | 'templates' | 'settings'
 
 export interface ModuleItem {
   id: ModuleType
@@ -43,8 +43,6 @@ export interface CommandFile {
 export interface AppSettings {
   startupWithSystem: boolean
   minimizeToTray: boolean
-  commandHotkey: string
-  commandScope: 'global' | 'internal'
   defaultBrowser: 'internal' | 'external'
   theme: 'light' | 'dark'
   fontSize: number

@@ -17,7 +17,6 @@ import (
 type App struct {
 	ctx             context.Context
 	configService   *services.ConfigService
-	hotkeyService   *services.HotkeyService
 	startupService  *services.StartupService
 	templateService *services.TemplateService
 	configDir       string
@@ -34,7 +33,6 @@ func NewApp() *App {
 	return &App{
 		configDir:       configDir,
 		configService:   services.NewConfigService(configDir),
-		hotkeyService:   services.NewHotkeyService(),
 		templateService: services.NewTemplateService(templatesDir),
 	}
 }
@@ -42,9 +40,6 @@ func NewApp() *App {
 // startup 应用启动时调用
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
-
-	// 设置上下文
-	a.hotkeyService.SetContext(ctx)
 
 	// 如果是静默启动，隐藏窗口
 	if a.startHidden {
@@ -68,7 +63,7 @@ func (a *App) startup(ctx context.Context) {
 		a.startupService = startupService
 	}
 
-	// 加载配置并注册快捷键
+	// 加载配置
 	config, err := a.configService.LoadConfig()
 	if err != nil {
 		fmt.Println("Failed to load config:", err)
@@ -84,23 +79,11 @@ func (a *App) startup(ctx context.Context) {
 			}
 		}
 	}
-
-	// 注册全局快捷键（如果配置为全局）
-	if config.Features.CommandScope == "global" {
-		err = a.hotkeyService.RegisterHotkey(config.Features.CommandHotkey, func() {
-			// 显示窗口
-			a.ShowWindow()
-		})
-		if err != nil {
-			fmt.Println("Failed to register hotkey:", err)
-		}
-	}
 }
 
 // shutdown 应用关闭时调用
 func (a *App) shutdown(ctx context.Context) {
-	// 注销快捷键
-	a.hotkeyService.UnregisterHotkey()
+	// 清理资源
 }
 
 // ShowWindow 显示窗口
@@ -146,18 +129,6 @@ func (a *App) IsStartupEnabled() (bool, error) {
 		return false, fmt.Errorf("startup service not initialized")
 	}
 	return a.startupService.IsStartupEnabled()
-}
-
-// RegisterHotkey 注册快捷键
-func (a *App) RegisterHotkey(key string) error {
-	return a.hotkeyService.RegisterHotkey(key, func() {
-		a.ShowWindow()
-	})
-}
-
-// UnregisterHotkey 注销快捷键
-func (a *App) UnregisterHotkey() error {
-	return a.hotkeyService.UnregisterHotkey()
 }
 
 // OpenFileWithDefault 使用系统默认应用打开文件

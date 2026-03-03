@@ -33,7 +33,6 @@ const searchPlaceholder = computed(() => {
   switch (props.module) {
     case 'bookmarks': return '搜索收藏...'
     case 'templates': return '搜索模板...'
-    case 'commands': return '搜索命令...'
     default: return '搜索...'
   }
 })
@@ -213,27 +212,9 @@ const contextMenuDeleteModule = () => {
   closeModuleContextMenu()
 }
 
-const commands = ref([
-  { id: 'c1', name: '最优编译.md', description: 'LaTeX编译命令', path: 'LaTeX/最优编译.md', content: 'pdflatex -interaction=nonstopmode -shell-escape main.tex\nbiber main\npdflatex main.tex' },
-  { id: 'c2', name: '数据流程.md', description: '数据分析流程', path: '常用/数据流程.md', content: '# 数据分析标准流程\n1. 数据清洗\n2. 探索性分析\n3. 建模\n4. 验证' },
-])
-
-// 过滤命令
-const filteredCommands = computed(() => {
-  if (!searchQuery.value) return commands.value
-  
-  const query = searchQuery.value.toLowerCase()
-  return commands.value.filter(cmd => 
-    cmd.name.toLowerCase().includes(query) ||
-    cmd.description.toLowerCase().includes(query)
-  )
-})
-
 const settings = ref([
   { id: 'general', name: '常规设置', icon: 'mdi-cog' },
   { id: 'storage', name: '数据存储位置', icon: 'mdi-database' },
-  { id: 'shortcuts', name: '快捷键', icon: 'mdi-keyboard' },
-  { id: 'browser', name: '浏览器', icon: 'mdi-web' },
   { id: 'appearance', name: '外观', icon: 'mdi-palette' },
 ])
 
@@ -645,21 +626,6 @@ const contextMenuOpenExternal = () => {
             @contextmenu.prevent="showTemplateContextMenu($event, file.path, file.name)"
           />
         </v-list-group>
-      </v-list>
-
-      <!-- 命令库列表 -->
-      <v-list v-if="module === 'commands'" nav density="compact">
-        <v-list-item
-          v-for="cmd in filteredCommands"
-          :key="cmd.id"
-          :title="cmd.name"
-          :subtitle="cmd.description"
-          prepend-icon="mdi-file-document-outline"
-          rounded="lg"
-          class="mb-1"
-          link
-          @click="selectCommand(cmd)"
-        />
       </v-list>
 
       <!-- 设置分类 -->
