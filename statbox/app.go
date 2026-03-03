@@ -7,15 +7,18 @@ import (
 	"path/filepath"
 
 	"statbox/internal/services"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App 应用主结构
 type App struct {
-	ctx           context.Context
-	configService *services.ConfigService
-	hotkeyService *services.HotkeyService
+	ctx            context.Context
+	configService  *services.ConfigService
+	hotkeyService  *services.HotkeyService
 	startupService *services.StartupService
-	configDir     string
+	configDir      string
+	startHidden    bool
 }
 
 // NewApp 创建应用实例
@@ -38,6 +41,11 @@ func (a *App) startup(ctx context.Context) {
 	// 设置上下文
 	a.hotkeyService.SetContext(ctx)
 
+	// 如果是静默启动，隐藏窗口
+	if a.startHidden {
+		runtime.WindowHide(ctx)
+	}
+
 	// 确保配置目录存在
 	a.configService.EnsureConfigDir()
 
@@ -56,7 +64,7 @@ func (a *App) startup(ctx context.Context) {
 		return
 	}
 
-	// 如果启用了开机自启动，确保注册
+	// 如果启用了开机自启动，确保注册（静默模式）
 	if config.Features.StartupWithSystem {
 		if a.startupService != nil {
 			err := a.startupService.EnableStartup()
@@ -86,9 +94,13 @@ func (a *App) shutdown(ctx context.Context) {
 
 // ShowWindow 显示窗口
 func (a *App) ShowWindow() {
-	// 通过事件通知前端显示窗口
-	// runtime.WindowShow(a.ctx)
-	// runtime.WindowUnminimise(a.ctx)
+	runtime.WindowShow(a.ctx)
+	runtime.WindowUnminimise(a.ctx)
+}
+
+// HideWindow 隐藏窗口（最小化到托盘）
+func (a *App) HideWindow() {
+	runtime.WindowHide(a.ctx)
 }
 
 // GetConfig 获取配置

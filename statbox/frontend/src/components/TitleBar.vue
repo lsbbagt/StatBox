@@ -12,7 +12,6 @@ defineEmits<{
   (e: 'toggle-right-panel'): void
 }>()
 
-const searchQuery = ref('')
 const isMaximised = ref(false)
 
 const checkWindowState = async () => {
@@ -44,10 +43,6 @@ const closeWindow = () => {
   console.log('Closing...')
   Quit()
 }
-
-const onSearch = () => {
-  console.log('Search:', searchQuery.value)
-}
 </script>
 
 <template>
@@ -69,21 +64,6 @@ const onSearch = () => {
     
     <v-icon icon="mdi-chart-box" class="ml-2" color="primary" size="20" />
     <span class="text-subtitle-2 ml-2 font-weight-medium text-primary">StatBox</span>
-    
-    <v-spacer />
-    
-    <!-- 中间：全局搜索 -->
-    <v-text-field
-      v-model="searchQuery"
-      density="compact"
-      variant="outlined"
-      placeholder="全局搜索..."
-      prepend-inner-icon="mdi-magnify"
-      class="mx-4 search-field"
-      hide-details
-      bg-color="background"
-      @keyup.enter="onSearch"
-    />
     
     <v-spacer />
     
@@ -116,7 +96,13 @@ const onSearch = () => {
   border-bottom: 1px solid rgb(var(--v-theme-border));
 }
 
-.search-field {
-  max-width: 400px;
+/* 使标题栏可拖动 */
+.title-bar :deep(.v-toolbar__content) {
+  --wails-draggable: drag;
+}
+
+/* 按钮不可拖动 */
+.title-bar :deep(.v-btn) {
+  --wails-draggable: no-drag;
 }
 </style>

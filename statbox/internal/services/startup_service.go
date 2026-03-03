@@ -42,8 +42,13 @@ func NewStartupService(appName string) (*StartupService, error) {
 	}, nil
 }
 
-// EnableStartup 启用开机自启动
+// EnableStartup 启用开机自启动（静默模式）
 func (s *StartupService) EnableStartup() error {
+	return s.EnableStartupWithArgs("--silent")
+}
+
+// EnableStartupWithArgs 启用开机自启动并指定参数
+func (s *StartupService) EnableStartupWithArgs(args string) error {
 	keyPath := "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
 	var hKey uintptr
 
@@ -61,8 +66,8 @@ func (s *StartupService) EnableStartup() error {
 	}
 	defer regCloseKey.Call(hKey)
 
-	// 设置值
-	value := syscall.StringToUTF16(s.appPath)
+	// 设置值（添加静默启动参数）
+	value := syscall.StringToUTF16(fmt.Sprintf("\"%s\" %s", s.appPath, args))
 	ret, _, err = regSetValueEx.Call(
 		hKey,
 		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(s.appName))),

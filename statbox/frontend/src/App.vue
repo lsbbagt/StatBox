@@ -1,14 +1,28 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, computed, markRaw } from 'vue'
 import TitleBar from './components/TitleBar.vue'
 import Sidebar from './components/Sidebar.vue'
 import RightPanel from './components/RightPanel.vue'
+import BookmarksView from './views/BookmarksView.vue'
+import TemplatesView from './views/TemplatesView.vue'
+import CommandsView from './views/CommandsView.vue'
+import SettingsView from './views/SettingsView.vue'
 
 type ModuleType = 'bookmarks' | 'templates' | 'commands' | 'settings'
 
 const sidebarVisible = ref(true)
 const rightPanelVisible = ref(true)
 const activeModule = ref<ModuleType>('bookmarks')
+
+const currentView = computed(() => {
+  switch (activeModule.value) {
+    case 'bookmarks': return markRaw(BookmarksView)
+    case 'templates': return markRaw(TemplatesView)
+    case 'commands': return markRaw(CommandsView)
+    case 'settings': return markRaw(SettingsView)
+    default: return markRaw(BookmarksView)
+  }
+})
 
 const toggleSidebar = () => {
   sidebarVisible.value = !sidebarVisible.value
@@ -44,31 +58,7 @@ const selectModule = (module: ModuleType) => {
         <v-row no-gutters class="fill-height">
           <!-- 中间主面板 -->
           <v-col class="d-flex flex-column">
-            <v-card flat tile class="fill-height">
-              <v-card-title class="text-h6 py-3 px-4 border-b">
-                {{ activeModule === 'bookmarks' ? '收藏夹' : 
-                   activeModule === 'templates' ? '代码模板' : 
-                   activeModule === 'commands' ? '命令库' : '设置' }}
-              </v-card-title>
-              <v-card-text class="flex-grow-1 overflow-auto">
-                <div class="text-center py-8">
-                  <v-icon :icon="activeModule === 'bookmarks' ? 'mdi-folder-star' : 
-                                 activeModule === 'templates' ? 'mdi-code-tags' : 
-                                 activeModule === 'commands' ? 'mdi-keyboard' : 'mdi-cog'" 
-                          size="64" color="primary" class="mb-4" />
-                  <h2 class="text-h5 mb-2">
-                    {{ activeModule === 'bookmarks' ? '收藏夹管理' : 
-                       activeModule === 'templates' ? '代码模板管理' : 
-                       activeModule === 'commands' ? '命令库' : '系统设置' }}
-                  </h2>
-                  <p class="text-body-1 text-medium-emphasis">
-                    {{ activeModule === 'bookmarks' ? '管理您的网址收藏，支持多标签页浏览器' : 
-                       activeModule === 'templates' ? '管理 R / Python / Julia 代码模板' : 
-                       activeModule === 'commands' ? '常用命令快捷调用（按 ~ 唤醒）' : '配置应用设置' }}
-                  </p>
-                </div>
-              </v-card-text>
-            </v-card>
+            <component :is="currentView" :key="activeModule" />
           </v-col>
           
           <!-- 右侧面板 -->

@@ -72,6 +72,16 @@ export const useBookmarksStore = defineStore('bookmarks', () => {
     }
   }
 
+  const updateBookmark = (folderId: string, itemId: string, updates: Partial<BookmarkItem>) => {
+    const folder = bookmarks.value.find(f => f.id === folderId)
+    if (folder) {
+      const item = folder.items.find(i => i.id === itemId)
+      if (item) {
+        Object.assign(item, updates)
+      }
+    }
+  }
+
   const removeBookmark = (folderId: string, itemId: string) => {
     const folder = bookmarks.value.find(f => f.id === folderId)
     if (folder) {
@@ -84,6 +94,7 @@ export const useBookmarksStore = defineStore('bookmarks', () => {
     searchQuery,
     filteredBookmarks,
     addBookmark,
+    updateBookmark,
     removeBookmark
   }
 })
