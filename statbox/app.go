@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"statbox/internal/services"
 
-	"github.com/wailsapp/wails/v2/pkg/runtime"
+	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App 应用主结构
@@ -43,7 +45,7 @@ func (a *App) startup(ctx context.Context) {
 
 	// 如果是静默启动，隐藏窗口
 	if a.startHidden {
-		runtime.WindowHide(ctx)
+		wailsRuntime.WindowHide(ctx)
 	}
 
 	// 确保配置目录存在
@@ -94,13 +96,13 @@ func (a *App) shutdown(ctx context.Context) {
 
 // ShowWindow 显示窗口
 func (a *App) ShowWindow() {
-	runtime.WindowShow(a.ctx)
-	runtime.WindowUnminimise(a.ctx)
+	wailsRuntime.WindowShow(a.ctx)
+	wailsRuntime.WindowUnminimise(a.ctx)
 }
 
 // HideWindow 隐藏窗口（最小化到托盘）
 func (a *App) HideWindow() {
-	runtime.WindowHide(a.ctx)
+	wailsRuntime.WindowHide(a.ctx)
 }
 
 // GetConfig 获取配置
@@ -147,4 +149,24 @@ func (a *App) RegisterHotkey(key string) error {
 // UnregisterHotkey 注销快捷键
 func (a *App) UnregisterHotkey() error {
 	return a.hotkeyService.UnregisterHotkey()
+}
+
+// OpenFileWithDefault 使用系统默认应用打开文件
+func (a *App) OpenFileWithDefault(filePath string) error {
+	// 检查文件是否存在
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return fmt.Errorf("文件不存在: %s", filePath)
+	}
+
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "start", "", filePath)
+	case "darwin":
+		cmd = exec.Command("open", filePath)
+	default: // linux
+		cmd = exec.Command("xdg-open", filePath)
+	}
+
+	return cmd.Start()
 }
