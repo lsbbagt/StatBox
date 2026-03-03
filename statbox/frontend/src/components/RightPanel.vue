@@ -767,7 +767,6 @@ const contextMenuOpenExternal = () => {
     v-model="contextMenu.show"
     :position-x="contextMenu.x"
     :position-y="contextMenu.y"
-    absolute
     offset-y
   >
     <v-list density="compact" nav>
@@ -820,7 +819,6 @@ const contextMenuOpenExternal = () => {
     v-model="templateContextMenu.show"
     :position-x="templateContextMenu.x"
     :position-y="templateContextMenu.y"
-    absolute
     offset-y
   >
     <v-list density="compact" nav>
@@ -845,7 +843,6 @@ const contextMenuOpenExternal = () => {
     v-model="moduleContextMenu.show"
     :position-x="moduleContextMenu.x"
     :position-y="moduleContextMenu.y"
-    absolute
     offset-y
   >
     <v-list density="compact" nav>
