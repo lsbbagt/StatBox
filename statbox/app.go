@@ -216,6 +216,29 @@ func (a *App) OpenTemplateFileFolder(relativePath string) error {
 	return a.OpenFolderInExplorer(folderPath)
 }
 
+// RunExecutable 运行可执行文件
+func (a *App) RunExecutable(relativePath string) error {
+	filePath := a.templateService.GetFilePath(relativePath)
+	
+	// 检查文件是否存在
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		return fmt.Errorf("文件不存在: %s", filePath)
+	}
+
+	// 使用 cmd /c start 来运行 exe 文件，这样可以在后台运行
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "start", "", filePath)
+	case "darwin":
+		cmd = exec.Command("open", filePath)
+	default: // linux
+		cmd = exec.Command("xdg-open", filePath)
+	}
+
+	return cmd.Start()
+}
+
 // OpenDirectoryDialog 打开目录选择对话框
 func (a *App) OpenDirectoryDialog(title string) (string, error) {
 	return wailsRuntime.OpenDirectoryDialog(a.ctx, wailsRuntime.OpenDialogOptions{

@@ -12,6 +12,7 @@ type TemplateFile struct {
 	Path     string `json:"path"`     // 相对路径
 	Language string `json:"language"` // R, Python, Julia, etc.
 	Code     string `json:"code"`
+	IsFolder bool   `json:"isFolder"` // 是否是文件夹
 }
 
 // TemplateModule 模板模块
@@ -87,7 +88,22 @@ func (s *TemplateService) getTemplateFiles(dir string, module string) ([]Templat
 	for _, entry := range entries {
 		fullPath := filepath.Join(dir, entry.Name())
 
+		// 计算相对路径
+		relPath, err := filepath.Rel(s.templatesDir, fullPath)
+		if err != nil {
+			continue
+		}
+
 		if entry.IsDir() {
+			// 添加文件夹项
+			files = append(files, TemplateFile{
+				Name:     entry.Name(),
+				Path:     filepath.ToSlash(relPath),
+				Language: "Folder",
+				Code:     "",
+				IsFolder: true,
+			})
+			
 			// 递归读取子目录
 			subFiles, err := s.getTemplateFiles(fullPath, module)
 			if err != nil {
@@ -109,12 +125,6 @@ func (s *TemplateService) getTemplateFiles(dir string, module string) ([]Templat
 			continue
 		}
 
-		// 计算相对路径
-		relPath, err := filepath.Rel(s.templatesDir, fullPath)
-		if err != nil {
-			continue
-		}
-
 		// 推断语言类型
 		language := getLanguageFromExt(ext)
 
@@ -123,6 +133,7 @@ func (s *TemplateService) getTemplateFiles(dir string, module string) ([]Templat
 			Path:     filepath.ToSlash(relPath),
 			Language: language,
 			Code:     string(content),
+			IsFolder: false,
 		})
 	}
 
@@ -181,6 +192,9 @@ func isValidTemplateExt(ext string) bool {
 		".txt":  true,
 		".tex":  true,
 		".json": true,
+		".exe":  true,
+		".bat":  true,
+		".cmd":  true,
 	}
 	return validExts[ext]
 }
@@ -200,6 +214,10 @@ func getLanguageFromExt(ext string) string {
 		return "LaTeX"
 	case ".json":
 		return "JSON"
+	case ".exe":
+		return "Executable"
+	case ".bat", ".cmd":
+		return "Batch"
 	default:
 		return "Text"
 	}

@@ -10,7 +10,8 @@ import {
   DeleteTemplateModule,
   DeleteTemplateFile,
   OpenTemplateModuleFolder,
-  OpenTemplateFileFolder
+  OpenTemplateFileFolder,
+  RunExecutable
 } from '../../wailsjs/go/main/App'
 import type { ModuleType, BookmarkItem, BookmarkFolder } from '../types'
 
@@ -75,10 +76,26 @@ const filteredTemplateModules = computed(() => {
     ...module,
     files: module.files.filter(file => 
       file.name.toLowerCase().includes(query) ||
-      file.language.toLowerCase().includes(query)
+      file.language.toLowerCase().includes(query) ||
+      file.path.toLowerCase().includes(query)
     )
   })).filter(module => module.files.length > 0)
 })
+
+// 获取文件路径深度
+const getPathDepth = (path: string): number => {
+  const parts = path.split('/')
+  return parts.length - 1 // 减去文件名本身
+}
+
+// 获取文件缩进级别
+const getFileIndent = (file: any): number => {
+  if (file.isFolder) {
+    return 16 // 文件夹的基础缩进
+  }
+  const depth = getPathDepth(file.path)
+  return 16 + depth * 24 // 每层额外缩进 24px，更明显的层次感
+}
 
 // 创建新模块
 const showNewModuleDialog = ref(false)
@@ -280,7 +297,24 @@ const openBookmark = (item: BookmarkItem) => {
 }
 
 // 选择模板
-const selectTemplate = (template: any) => {
+const selectTemplate = async (template: any) => {
+  // 如果是文件夹，不做任何操作
+  if (template.isFolder) {
+    return
+  }
+  
+  // 如果是可执行文件，直接运行
+  if (template.language === 'Executable' || template.language === 'Batch') {
+    try {
+      await RunExecutable(template.path)
+    } catch (error) {
+      console.error('运行可执行文件失败:', error)
+      alert('运行可执行文件失败: ' + error)
+    }
+    return
+  }
+  
+  // 其他文件类型，选择并显示
   selectionStore.selectItem('template', template)
 }
 
@@ -628,9 +662,12 @@ const contextMenuOpenExternal = () => {
             v-for="file in module.files"
             :key="file.path"
             :title="file.name"
-            :subtitle="file.language"
+            :subtitle="file.isFolder ? '📁 文件夹' : file.language"
+            :prepend-icon="file.isFolder ? 'mdi-folder' : (file.language === 'Executable' ? 'mdi-application' : (file.language === 'Batch' ? 'mdi-console' : 'mdi-file-document'))"
+            :prepend-icon-color="file.isFolder ? 'primary' : undefined"
             rounded="lg"
-            class="ml-4 mb-1"
+            :class="file.isFolder ? 'ml-4 mb-1 folder-item' : 'ml-4 mb-1'"
+            :style="{ 'padding-left': getFileIndent(file) + 'px !important' }"
             link
             @click="selectTemplate(file)"
             @contextmenu.prevent="showTemplateContextMenu($event, file.path, file.name)"
@@ -775,10 +812,7 @@ const contextMenuOpenExternal = () => {
   <!-- 右键菜单 -->
   <v-menu
     v-model="contextMenu.show"
-    :position-x="contextMenu.x"
-    :position-y="contextMenu.y"
-    absolute
-    offset-y
+    :target="[contextMenu.x, contextMenu.y]"
     :close-on-content-click="true"
     content-class="context-menu"
   >
@@ -832,10 +866,7 @@ const contextMenuOpenExternal = () => {
   <!-- 模板文件右键菜单 -->
   <v-menu
     v-model="templateContextMenu.show"
-    :position-x="templateContextMenu.x"
-    :position-y="templateContextMenu.y"
-    absolute
-    offset-y
+    :target="[templateContextMenu.x, templateContextMenu.y]"
     :close-on-content-click="true"
     content-class="context-menu"
   >
@@ -861,10 +892,7 @@ const contextMenuOpenExternal = () => {
   <!-- 模块右键菜单 -->
   <v-menu
     v-model="moduleContextMenu.show"
-    :position-x="moduleContextMenu.x"
-    :position-y="moduleContextMenu.y"
-    absolute
-    offset-y
+    :target="[moduleContextMenu.x, moduleContextMenu.y]"
     :close-on-content-click="true"
     content-class="context-menu"
   >
@@ -938,5 +966,27 @@ const contextMenuOpenExternal = () => {
   right: 16px;
   top: 60px;
   z-index: 100;
+}
+
+/* 文件夹项样式 */
+.folder-item {
+  font-weight: 600 !important;
+  background-color: rgba(var(--v-theme-primary), 0.05) !important;
+  border-left: 3px solid rgb(var(--v-theme-primary)) !important;
+  margin-bottom: 4px !important;
+}
+
+.folder-item:hover {
+  background-color: rgba(var(--v-theme-primary), 0.1) !important;
+}
+
+.folder-item .v-list-item-title {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+.folder-item .v-list-item-subtitle {
+  font-size: 11px !important;
+  opacity: 0.8;
 }
 </style>
