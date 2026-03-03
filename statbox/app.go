@@ -15,12 +15,13 @@ import (
 
 // App 应用主结构
 type App struct {
-	ctx            context.Context
-	configService  *services.ConfigService
-	hotkeyService  *services.HotkeyService
-	startupService *services.StartupService
-	configDir      string
-	startHidden    bool
+	ctx             context.Context
+	configService   *services.ConfigService
+	hotkeyService   *services.HotkeyService
+	startupService  *services.StartupService
+	templateService *services.TemplateService
+	configDir       string
+	startHidden     bool
 }
 
 // NewApp 创建应用实例
@@ -28,11 +29,13 @@ func NewApp() *App {
 	// 获取用户配置目录
 	homeDir, _ := os.UserHomeDir()
 	configDir := filepath.Join(homeDir, ".statbox")
+	templatesDir := filepath.Join(configDir, "templates")
 
 	return &App{
-		configDir:     configDir,
-		configService: services.NewConfigService(configDir),
-		hotkeyService: services.NewHotkeyService(),
+		configDir:       configDir,
+		configService:   services.NewConfigService(configDir),
+		hotkeyService:   services.NewHotkeyService(),
+		templateService: services.NewTemplateService(templatesDir),
 	}
 }
 
@@ -50,6 +53,9 @@ func (a *App) startup(ctx context.Context) {
 
 	// 确保配置目录存在
 	a.configService.EnsureConfigDir()
+
+	// 确保模板目录存在
+	a.templateService.EnsureTemplatesDir()
 	
 	// 确保模板目录存在
 	a.templateService.EnsureTemplatesDir()
