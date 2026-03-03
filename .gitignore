@@ -20,6 +20,9 @@ wailsjs/
 *.out
 go.sum
 
+# 但允许 releases 目录中的 exe 文件
+!releases/*.exe
+
 # IDE
 .vscode/
 .idea/
